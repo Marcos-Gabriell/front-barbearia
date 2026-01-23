@@ -1,59 +1,168 @@
-# BarbeariaFront
+# 💈 BarberShop Management – Web Panel (Frontend)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.19.
+Painel web de gestão para barbearias, desenvolvido com **Angular 19**, consumindo uma **API REST em Java / Spring Boot**.  
+O sistema oferece uma interface moderna, segura e escalável para administração de usuários, autenticação, perfis e preferências visuais.
 
-## Development server
+---
 
-To start a local development server, run:
+## 🚀 Tecnologias Utilizadas
 
+- **Angular 19**
+- **TypeScript**
+- **Standalone Components**
+- **Angular Router**
+- **Reactive Forms**
+- **JWT (JSON Web Token)**
+- **CSS moderno (Dark / Light Theme)**
+- **Integração com API Java / Spring Boot**
+
+---
+
+## 🧱 Arquitetura Frontend
+
+O projeto segue boas práticas de arquitetura frontend, com foco em:
+
+- Separação de responsabilidades
+- Componentização
+- Segurança na navegação
+- Experiência do usuário (UX)
+- Escalabilidade e manutenção
+
+Destaques técnicos:
+- Uso de **Standalone Components** (sem NgModules)
+- Serviços desacoplados para autenticação, usuários e preferências
+- Interceptors e Guards centralizados
+- Validações robustas com **Reactive Forms**
+
+---
+
+## 🔐 Segurança Avançada (JWT)
+
+A segurança da aplicação é baseada em **JWT**, integrada diretamente com o backend Spring Boot.
+
+### 🔁 HTTP Interceptor
+- Anexa automaticamente o **token JWT** no header `Authorization`
+- Centraliza o tratamento de erros de autenticação (401 / 403)
+
+### 🛡️ Route Guards
+- Proteção de rotas baseada em autenticação e perfil do usuário
+- Separação entre rotas públicas, autenticadas e administrativas
+- Bloqueio de acesso não autorizado via URL direta
+
+---
+
+## 🔑 Autenticação
+
+### ✅ Login
+- Tela de login segura
+- Validação com **Reactive Forms**
+- Integração direta com a API de autenticação
+
+### 🔄 Esqueci Minha Senha
+- Fluxo completo de recuperação de senha
+- Envio de código/token por e-mail
+- Validação antes da redefinição
+
+---
+
+## 👥 Gestão de Usuários & Convites
+
+### ✉️ Criação de Usuário por Convite
+- Validação obrigatória de **Token de Convite via URL**
+- Liberação do formulário apenas após validação do token
+
+### 📋 Listagem e Gestão de Usuários
+- Listagem de usuários
+- Gestão de permissões e status
+- Interface administrativa organizada
+
+---
+
+## 🙍‍♂️ Meu Perfil
+
+- Tela de autoedição de perfil
+- Atualização de dados pessoais e senha
+- Validações completas com **Reactive Forms**
+
+---
+
+## 🎨 UX / UI – Sistema de Temas
+
+- **Dark Mode 🌙** e **Light Mode ☀️**
+- Persistência da preferência do usuário
+- Aplicação imediata do tema
+
+---
+
+## 🧪 Validações com Reactive Forms
+
+- Validações síncronas e assíncronas
+- Controle de estado de formulários
+- Feedback visual claro ao usuário
+
+---
+
+## ⚙️ Instalação e Execução
+
+### Pré-requisitos
+- Node.js (LTS)
+- Angular CLI
+
+### 📦 Instalação
+```bash
+npm install
+```
+
+### ▶️ Executar
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+Acesse:
+```
+http://localhost:4200
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
-```
+## 🔗 Integração com Backend
 
-## Building
+Consome uma **API REST em Java / Spring Boot**, responsável por:
+- Autenticação e autorização
+- Emissão e validação de JWT
+- Gestão de usuários e convites
 
-To build the project run:
+---
 
-```bash
-ng build
-```
+## 🛣️ Roadmap (Em Desenvolvimento)
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+As próximas evoluções do sistema incluem:
 
-## Running unit tests
+### 🧾 Catálogo de Serviços
+- Cadastro e gestão de serviços da barbearia
+- Definição de preços, duração e status
+- Organização para uso direto no agendamento
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+### 📅 Módulo de Agendamento
+- Agenda inteligente por barbeiro
+- Controle de horários disponíveis e ocupados
+- Visualização diária, semanal e mensal
+- Integração direta com catálogo de serviços
 
-```bash
-ng test
-```
+### 📊 Dashboard Inteligente
+- Indicadores estratégicos da barbearia
+- Métricas de agendamentos, usuários e serviços
+- Visualizações gráficas para apoio à tomada de decisão
 
-## Running end-to-end tests
+---
 
-For end-to-end (e2e) testing, run:
+## 📌 Status do Projeto
 
-```bash
-ng e2e
-```
+🚧 **Em desenvolvimento ativo**  
+Novos módulos e melhorias estão sendo implementados continuamente.
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+## 👨‍💻 Autor
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Projeto desenvolvido com foco em **segurança**, **arquitetura limpa** e **experiência do usuário**.
