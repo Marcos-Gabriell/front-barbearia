@@ -1,0 +1,448 @@
+@use 'sass:color';
+@import url('https://fonts.googleapis.com/css2?family=Rye&family=Inter:wght@400;500;600;700&display=swap');
+
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Anti-vazamento + consistência */
+:host,
+.split-layout,
+.form-section {
+  overflow-x: clip; /* se não suportar, não quebra */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+svg {
+  max-width: 100%;
+  height: auto;
+  display: block; /* evita “sobrinha” inline */
+}
+
+$primary: #0f172a;
+$accent: #2563eb;
+$danger: #ef4444;
+$text-dark: #1e293b;
+$text-gray: #64748b;
+$bg-input: #f8fafc;
+
+// --- ESTRUTURA ---
+.split-layout {
+  display: flex;
+  min-height: 100svh; /* troca 100vh por 100svh */
+  width: 100%;
+  max-width: 100%;
+  background: white;
+  font-family: 'Inter', sans-serif;
+}
+
+// --- DESKTOP (ESQUERDA) ---
+.brand-section {
+  flex: 1;
+  width: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: $primary;
+  background-image: url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=2074&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.98));
+    z-index: 1;
+  }
+
+  .brand-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+
+    .logo {
+      max-width: 240px;
+      height: auto;
+      margin: 0 auto 24px;
+    }
+
+    .logo-wrapper {
+      filter: drop-shadow(0 0 15px rgba(255,255,255,0.15));
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-family: 'Rye', serif;
+      font-size: 42px;
+      color: #f1f5f9;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    p {
+      font-size: 16px;
+      color: #cbd5e1;
+      margin-top: 8px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    display: none;
+  }
+}
+
+// --- FORMULÁRIO (DIREITA / MOBILE) ---
+.form-section {
+  flex: 1;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  padding: 40px;
+  max-width: 100%;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 380px;
+}
+
+/* --- HEADER MOBILE --- */
+.header-mobile {
+  display: none;
+  justify-content: center;
+  margin-bottom: 24px;
+
+  .icon-circle-dashed {
+    width: 100px;
+    height: 100px;
+    border: 2px dashed $text-dark;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+  }
+}
+
+.header-text {
+  text-align: left;
+  margin-bottom: 32px;
+
+  h1 {
+    font-family: 'Rye', serif;
+    font-size: 32px;
+    color: $text-dark;
+    margin: 0 0 8px;
+  }
+
+  p {
+    font-size: 14px;
+    color: $text-gray;
+    margin: 0;
+  }
+}
+
+// --- INPUTS ---
+.field {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: $text-gray;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .input-wrapper {
+    position: relative;
+
+    input {
+      width: 100%;
+      max-width: 100%;
+      padding: 14px 44px;
+      font-size: 16px; /* evita zoom iOS */
+      color: $text-dark;
+      background: $bg-input;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      outline: none;
+      min-height: 52px;
+
+      &:focus {
+        background: white;
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+      }
+
+      &.error {
+        border-color: $danger;
+        background: #fff5f5;
+      }
+    }
+
+    .field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      display: flex;
+      pointer-events: none;
+    }
+
+    .eye-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      color: #94a3b8;
+      display: flex;
+
+      &:hover {
+        color: $primary;
+      }
+    }
+  }
+}
+
+// --- AÇÕES ---
+.actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: $text-gray;
+
+  .remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+
+    input {
+      width: 18px;
+      height: 18px;
+      accent-color: $primary;
+    }
+  }
+
+  .forgot-link {
+    color: $accent;
+    font-weight: 600;
+    text-decoration: none;
+  }
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 16px;
+  background: $primary;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+  &:hover {
+    background: color.adjust($primary, $lightness: 5%);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.footer {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 14px;
+  color: $text-gray;
+
+  b {
+    color: $primary;
+    cursor: pointer;
+  }
+}
+
+// --- MODAL ---
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal-card {
+  background: white;
+  width: 100%;
+  max-width: 320px;
+  padding: 32px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
+  h3 {
+    font-family: 'Rye', serif;
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .btn-modal {
+    width: 100%;
+    padding: 12px;
+    background: $primary;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-top: 16px;
+    cursor: pointer;
+  }
+}
+
+// --- ANIMAÇÕES ---
+.fade-in { animation: fadeIn 0.8s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* =========================
+   MOBILE (APP) – <= 900px
+   ========================= */
+@media (max-width: 900px) {
+
+  .split-layout {
+    flex-direction: column;
+    min-height: 100svh;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden; /* fallback do clip */
+    background: #f1f5f9;
+  }
+
+  .form-section {
+    width: 100%;
+    flex: 1;
+    max-width: 100%;
+    background: #f1f5f9;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  }
+
+  .header-mobile {
+    display: flex;
+    margin-bottom: 12px;
+
+    .mobile-logo {
+      max-width: 120px;
+      height: auto;
+      margin: 0 auto;
+    }
+
+    .icon-circle-dashed {
+      width: 72px;
+      height: 72px;
+    }
+
+    svg {
+      width: 46px !important;
+      height: 46px !important;
+    }
+  }
+
+  .header-text {
+    text-align: center;
+    margin-bottom: 14px;
+
+    h1 { font-size: 26px; }
+    p  { font-size: 12.5px; }
+  }
+
+  .field {
+    margin-bottom: 12px;
+
+    label { font-size: 10.5px; }
+
+    .input-wrapper input {
+      min-height: 48px;
+      border-radius: 12px;
+      padding: 12px 42px;
+      font-size: 16px;
+    }
+
+    .eye-btn { padding: 8px; }
+  }
+
+  .actions-row {
+    margin: 8px 0 14px;
+    font-size: 13px;
+    gap: 8px;
+  }
+
+  .btn-submit {
+    min-height: 48px;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 15px;
+
+    &:hover { transform: none; }
+  }
+
+  .footer {
+    margin-top: 14px;
+    font-size: 12.5px;
+  }
+}
+
+/* Extra: celulares bem pequenos */
+@media (max-width: 380px) {
+  .form-container { padding: 14px; }
+  .header-text h1 { font-size: 24px; }
+}

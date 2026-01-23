@@ -1,0 +1,283 @@
+<div class="page-container fade-in">
+  
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Meu Perfil</h1>
+      <p>Gerencie suas informações pessoais e credenciais de acesso.</p>
+    </div>
+  </header>
+
+  <div *ngIf="isLoading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Carregando...</p>
+  </div>
+
+  <div *ngIf="!isLoading()" class="card profile-main-card animate-up">
+    
+    <div class="profile-summary">
+      <div class="avatar-circle-xl">{{ user()?.name?.charAt(0) }}</div>
+      <div class="summary-text">
+        <h2 class="text-truncate-header" [title]="user()?.name">{{ user()?.name }}</h2>
+        <span class="badge role" [ngClass]="user()?.role?.toLowerCase()">{{ user()?.role }}</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="fields-list">
+      
+      <div class="field-row">
+        <div class="field-icon-wrapper blue">
+          <lucide-icon [name]="icons.UserIcon" class="w-5 h-5"></lucide-icon>
+        </div>
+        <div class="field-info">
+          <span class="label">Nome Completo</span>
+          <span class="value name-value" [title]="user()?.name">{{ user()?.name }}</span>
+        </div>
+        <button class="btn-icon-edit" (click)="openModal('NAME')" title="Editar Nome">
+          <lucide-icon [name]="icons.Edit2" class="w-4 h-4"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="field-row">
+        <div class="field-icon-wrapper purple">
+          <lucide-icon [name]="icons.Mail" class="w-5 h-5"></lucide-icon>
+        </div>
+        <div class="field-info">
+          <span class="label">E-mail</span>
+          <span class="value email-value" [title]="user()?.email">
+            {{ user()?.email }}
+          </span>
+          <span *ngIf="user()?.pendingEmail" class="pending-badge email-value" [title]="user()?.pendingEmail">
+            <lucide-icon [name]="icons.Clock" class="w-3 h-3"></lucide-icon> 
+            Pendente: {{ user()?.pendingEmail }}
+          </span>
+        </div>
+        <button class="btn-icon-edit" (click)="openModal('EMAIL')" title="Alterar E-mail">
+          <lucide-icon [name]="icons.Edit2" class="w-4 h-4"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="field-row">
+        <div class="field-icon-wrapper green">
+          <lucide-icon [name]="icons.Phone" class="w-5 h-5"></lucide-icon>
+        </div>
+        <div class="field-info">
+          <span class="label">Telefone</span>
+          <span class="value">{{ formatPhoneDisplay(user()?.phone) }}</span>
+        </div>
+        <button class="btn-icon-edit" (click)="openModal('PHONE')" title="Editar Telefone">
+          <lucide-icon [name]="icons.Edit2" class="w-4 h-4"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="field-row">
+        <div class="field-icon-wrapper orange">
+          <lucide-icon [name]="icons.Lock" class="w-5 h-5"></lucide-icon>
+        </div>
+        <div class="field-info">
+          <span class="label">Senha</span>
+          <span class="value password-mask">•••••••••••••••</span>
+        </div>
+        <button class="btn-icon-edit" (click)="openModal('PASSWORD')" title="Alterar Senha">
+          <lucide-icon [name]="icons.Edit2" class="w-4 h-4"></lucide-icon>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="activeModal() === 'NAME'">
+    <div class="modal-card fade-in-up">
+      <div class="modal-header">
+        <h2>Editar Nome</h2>
+        <button class="close-btn-circle" (click)="closeModal()">
+          <lucide-icon [name]="icons.X"></lucide-icon>
+        </button>
+      </div>
+      <form [formGroup]="nameForm" (ngSubmit)="updateName()">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nome Completo</label>
+            <input type="text" formControlName="name" class="modern-input" placeholder="Seu nome">
+            <div *ngIf="nameForm.get('name')?.invalid && nameForm.get('name')?.touched" class="error-msg">
+              Mínimo de 3 caracteres.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" (click)="closeModal()">Cancelar</button>
+          <button type="submit" class="btn-primary rounded-pill" [disabled]="isSaving()">
+            <div *ngIf="isSaving()" class="spinner-small"></div>
+            <span *ngIf="!isSaving()">Salvar</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="activeModal() === 'EMAIL'">
+    <div class="modal-card fade-in-up">
+      <div class="modal-header">
+        <h2>Alterar E-mail</h2>
+        <button class="close-btn-circle" (click)="closeModal()">
+          <lucide-icon [name]="icons.X"></lucide-icon>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="emailForm" *ngIf="!showEmailCodeInput()" (ngSubmit)="initiateEmailUpdate()">
+          <div class="form-group">
+            <label>Novo E-mail</label>
+            <input type="email" formControlName="email" class="modern-input" placeholder="exemplo@email.com">
+          </div>
+          <div class="modal-footer no-padding">
+            <button type="button" class="btn-ghost" (click)="closeModal()">Cancelar</button>
+            <button type="submit" class="btn-primary rounded-pill" [disabled]="isSaving()">
+              <div *ngIf="isSaving()" class="spinner-small"></div>
+              <span *ngIf="!isSaving()">Continuar</span>
+            </button>
+          </div>
+        </form>
+
+        <div *ngIf="showEmailCodeInput()">
+          <p class="text-sm text-gray-500 mb-4 text-center">Digite o código de 6 números enviado.</p>
+          <div class="form-group code-input-container">
+            <input type="text" class="modern-input code-input" [value]="verificationCode()" 
+                   (input)="onCodeInput($event)" maxlength="6" inputmode="numeric" placeholder="0 0 0 0 0 0">
+          </div>
+          <div class="modal-footer no-padding">
+            <button type="button" class="btn-ghost" (click)="closeModal()">Cancelar</button>
+            <button type="button" class="btn-primary rounded-pill" (click)="confirmEmailUpdate()" [disabled]="isSaving()">
+              <div *ngIf="isSaving()" class="spinner-small"></div>
+              <span *ngIf="!isSaving()">Confirmar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="activeModal() === 'PHONE'">
+    <div class="modal-card fade-in-up">
+      <div class="modal-header">
+        <h2>Editar Telefone</h2>
+        <button class="close-btn-circle" (click)="closeModal()">
+          <lucide-icon [name]="icons.X"></lucide-icon>
+        </button>
+      </div>
+      <form [formGroup]="phoneForm" (ngSubmit)="updatePhone()">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Celular / WhatsApp</label>
+            <input type="tel" 
+                   formControlName="phone" 
+                   class="modern-input" 
+                   placeholder="(00) 00000-0000"
+                   (input)="onPhoneInput($event)"
+                   maxlength="15">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" (click)="closeModal()">Cancelar</button>
+          <button type="submit" class="btn-primary rounded-pill" [disabled]="isSaving()">
+            <div *ngIf="isSaving()" class="spinner-small"></div>
+            <span *ngIf="!isSaving()">Salvar</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="activeModal() === 'PASSWORD'">
+    <div class="modal-card fade-in-up">
+      <div class="modal-header">
+        <h2>Alterar Senha</h2>
+        <button class="close-btn-circle" (click)="closeModal()">
+          <lucide-icon [name]="icons.X"></lucide-icon>
+        </button>
+      </div>
+      <form [formGroup]="passwordForm" (ngSubmit)="updatePassword()">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Senha Atual</label>
+            <div class="password-input-wrapper">
+              <input [type]="showCurrentPassword() ? 'text' : 'password'" formControlName="currentPassword" class="modern-input" placeholder="••••••">
+              <button type="button" class="eye-btn" (click)="togglePasswordVisibility('current')">
+                <svg *ngIf="!showCurrentPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg *ngIf="showCurrentPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+            <div *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched" class="error-msg">
+              Obrigatório.
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Nova Senha</label>
+            <div class="password-input-wrapper">
+              <input [type]="showNewPassword() ? 'text' : 'password'" formControlName="newPassword" class="modern-input" placeholder="••••••">
+              <button type="button" class="eye-btn" (click)="togglePasswordVisibility('new')">
+                <svg *ngIf="!showNewPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg *ngIf="showNewPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+            <div *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched" class="error-msg">
+              Mínimo de 6 caracteres.
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirmar Nova Senha</label>
+            <div class="password-input-wrapper">
+              <input [type]="showConfirmPassword() ? 'text' : 'password'" formControlName="confirmNewPassword" class="modern-input" placeholder="••••••">
+              <button type="button" class="eye-btn" (click)="togglePasswordVisibility('confirm')">
+                <svg *ngIf="!showConfirmPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg *ngIf="showConfirmPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+            <div *ngIf="passwordForm.errors?.['mismatch'] && passwordForm.get('confirmNewPassword')?.touched" class="error-msg">
+              As senhas não conferem.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" (click)="closeModal()">Cancelar</button>
+          <button type="submit" class="btn-primary rounded-pill" [disabled]="isSaving()">
+            <div *ngIf="isSaving()" class="spinner-small"></div>
+            <span *ngIf="!isSaving()">Alterar Senha</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showSuccessModal()">
+    <div class="modal-card fade-in-up" style="max-width: 340px;">
+      <div class="modal-body text-center" style="padding: 30px 24px; text-align: center;">
+        
+        <div class="success-checkmark-anim">
+          <div class="check-icon">
+            <span class="icon-line line-tip"></span>
+            <span class="icon-line line-long"></span>
+            <div class="icon-circle"></div>
+            <div class="icon-fix"></div>
+          </div>
+        </div>
+
+        <h3 style="margin: 20px 0 8px 0; color: var(--text-main); font-size: 20px; font-weight: 700;">
+          {{ successTitle() }}
+        </h3>
+        
+        <p style="color: var(--text-muted); font-size: 14px; margin: 0 0 24px 0; line-height: 1.5;">
+          {{ successMessage() }}
+        </p>
+
+        <div class="action-buttons-center" style="display: flex; justify-content: center;">
+          <button class="btn-primary rounded-pill" style="width: 100%; justify-content: center;" (click)="closeSuccessModal()">
+            OK, Entendi
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

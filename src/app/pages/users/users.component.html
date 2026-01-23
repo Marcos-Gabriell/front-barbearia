@@ -1,0 +1,269 @@
+<div class="page-container fade-in">
+  
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Gestão de Usuários</h1>
+      <p>Gerencie o acesso e permissões da equipe.</p>
+    </div>
+    <button class="btn-primary rounded-pill" (click)="openCreate()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      <span class="btn-text">Novo Usuário</span>
+    </button>
+  </header>
+
+  <div class="card table-container">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-name">Nome</th>
+            <th class="col-email desktop-only">E-mail</th>
+            <th class="col-role desktop-only">Role</th>
+            <th class="col-status desktop-only">Status</th>
+            <th class="actions-col">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of paginatedUsers">
+            <td class="col-name">
+              <div class="user-info">
+                <div class="avatar-circle">{{ user.name.charAt(0) }}</div>
+                <span class="font-medium text-truncate">{{ user.name }}</span>
+              </div>
+            </td>
+            <td class="col-email desktop-only">{{ user.email }}</td>
+            <td class="col-role desktop-only">
+              <span class="badge role" [ngClass]="user.role.toLowerCase()">{{ user.role }}</span>
+            </td>
+            <td class="col-status desktop-only">
+              <span class="badge status" [class.active]="user.active" [class.inactive]="!user.active">
+                {{ user.active ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+            <td class="actions-col">
+              <div class="action-buttons">
+                <button *ngIf="user.id !== currentUserId && !user.active" class="action-btn success" (click)="toggleActive(user)" title="Ativar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </button>
+                <button *ngIf="user.id !== currentUserId" class="action-btn warning" (click)="openResetModal(user)" title="Resetar Senha">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </button>
+                <button *ngIf="user.id !== currentUserId" class="action-btn edit" (click)="openEdit(user)" title="Editar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button class="action-btn details" (click)="openDetails(user)" title="Detalhes">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </button>
+                <button *ngIf="user.id !== currentUserId" class="action-btn delete" (click)="confirmDelete(user)" title="Excluir">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="users.length === 0 && !isLoading">
+            <td colspan="5" class="empty-state">Nenhum usuário encontrado.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-controls" *ngIf="users.length > 0">
+      <button class="page-btn prev" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <span class="page-number">{{ currentPage }} de {{ totalPages }}</span>
+      <button class="page-btn next" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showFormModal">
+    <div class="modal-card fade-in-up">
+      <div class="modal-header">
+        <h2>{{ isEditing ? 'Editar Usuário' : 'Convidar Usuário' }}</h2>
+        <button class="close-btn-circle" (click)="closeModals()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="modal-body">
+          
+          <div class="form-group" *ngIf="isEditing">
+            <label>Nome Completo</label>
+            <input type="text" formControlName="name" placeholder="Ex: João Silva" class="modern-input" maxlength="100"
+              [class.error-border]="submitted && f['name'].invalid">
+            <div *ngIf="submitted && f['name'].errors" class="error-msg">
+              <span *ngIf="f['name'].errors?.['required']">Nome é obrigatório.</span>
+            </div>
+          </div>
+
+          <div class="form-group relative-group">
+            <label>E-mail</label>
+            <input type="email" formControlName="email" placeholder="email@barbearia.com" class="modern-input" autocomplete="off" maxlength="150"
+              [class.error-border]="submitted && f['email'].invalid">
+            <div *ngIf="submitted && f['email'].errors" class="error-msg">
+              <span *ngIf="f['email'].errors?.['required']">E-mail é obrigatório.</span>
+              <span *ngIf="f['email'].errors?.['email']">E-mail inválido.</span>
+            </div>
+            <ul class="suggestions-list" *ngIf="emailSuggestions.length > 0">
+              <li *ngFor="let domain of emailSuggestions" (click)="selectSuggestion(domain)">
+                <span class="at-symbol">&#64;</span>{{ domain }}
+              </li>
+            </ul>
+          </div>
+
+          <div class="form-group">
+            <label>Permissão</label>
+            <div class="select-wrapper">
+              <select formControlName="role" class="modern-select" [class.error-border]="submitted && f['role'].invalid">
+                <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+              </select>
+              <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </div>
+
+          </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" (click)="closeModals()">Cancelar</button>
+          <button type="submit" class="btn-primary rounded-pill" [disabled]="isLoading">
+              <div *ngIf="isLoading" class="spinner"></div>
+              <span *ngIf="!isLoading">{{ isEditing ? 'Salvar' : 'Enviar Convite' }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showSuccessInviteModal">
+    <div class="modal-card small-modal fade-in-up">
+      <div class="modal-body text-center" style="padding-top: 30px; padding-bottom: 30px;">
+        
+        <div class="success-checkmark-anim">
+          <div class="check-icon">
+            <span class="icon-line line-tip"></span>
+            <span class="icon-line line-long"></span>
+            <div class="icon-circle"></div>
+            <div class="icon-fix"></div>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 16px; color: var(--text-main);">Convite Enviado!</h3>
+        <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">
+          O e-mail foi enviado com sucesso para <br> 
+          <strong style="color: var(--text-main);">{{ invitedEmail }}</strong>
+        </p>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: 16px;">
+          Peça para o usuário verificar a caixa de entrada e seguir as instruções para criar a conta.
+        </p>
+
+        <div class="action-buttons-center" style="margin-top: 24px;">
+          <button class="btn-primary rounded-pill full-width" (click)="closeModals()">OK, Entendi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showDetailsModal && selectedUser">
+    <div class="modal-card fade-in-up details-modal">
+        <div class="modal-header">
+          <h2>Detalhes</h2>
+          <button class="close-btn-circle" (click)="closeModals()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <div class="modal-body details-body">
+          <div class="user-profile-header">
+            <div class="avatar-large">{{ selectedUser.name.charAt(0) }}</div>
+            <div class="text-content">
+              <h3>{{ selectedUser.name }}</h3>
+              <span class="badge role" [ngClass]="selectedUser.role.toLowerCase()">{{ selectedUser.role }}</span>
+            </div>
+          </div>
+          <div class="details-list">
+            <div class="detail-row"><span class="label">E-mail:</span><span class="value">{{ selectedUser.email }}</span></div>
+            <div class="detail-row" *ngIf="selectedUser.phone"><span class="label">Telefone:</span><span class="value">{{ selectedUser.phone }}</span></div>
+            <div class="detail-row"><span class="label">Status:</span><span class="value status-value" [class.active]="selectedUser.active"><span class="dot"></span> {{ selectedUser.active ? 'Ativo' : 'Inativo' }}</span></div>
+            <div class="detail-row" *ngIf="selectedUser.createdAt"><span class="label">Criado em:</span><span class="value">{{ selectedUser.createdAt }}</span></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn-primary rounded-pill full-width" (click)="closeModals()">Fechar</button></div>
+      </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showResetModal">
+    <div class="modal-card small-modal fade-in-up">
+        <div class="modal-body text-center">
+          <ng-container *ngIf="resetStep === 'confirm'">
+            <div class="warning-icon yellow"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <h3>Resetar Senha?</h3>
+            <p>Deseja gerar uma nova senha para <b>{{ selectedUser?.name }}</b>?</p>
+            <div class="action-buttons-center"><button class="btn-ghost" (click)="closeModals()">Não</button><button class="btn-primary rounded-pill" (click)="confirmResetPass()" [disabled]="isLoading"><div *ngIf="isLoading" class="spinner"></div><span *ngIf="!isLoading">Sim</span></button></div>
+          </ng-container>
+          <ng-container *ngIf="resetStep === 'success'">
+            <div class="success-content">
+              <div class="warning-icon green" style="margin: 0 auto 16px;"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+              <h3>{{ modalSuccessTitle }}</h3>
+              <p *ngIf="successMessage" style="color: var(--text-muted); margin-bottom: 20px;">{{ successMessage }}</p>
+              <div *ngIf="tempPasswordDisplay">
+                <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Senha Temporária:</p>
+                <div class="temp-password-container"><div class="temp-password-box">{{ tempPasswordDisplay }}</div><button class="btn-copy" (click)="copyToClipboard(tempPasswordDisplay)" title="Copiar Senha"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
+                <div class="timer-badge" *ngIf="countdown">Fechando em {{ countdown }}s</div>
+              </div>
+              <div class="action-buttons-center"><button class="btn-primary rounded-pill full-width" (click)="closeModals()">OK</button></div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showDeleteModal && selectedUser">
+    <div class="modal-card small-modal fade-in-up">
+        <div class="modal-body text-center">
+          <div class="warning-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <h3>Excluir?</h3>
+          <p>Confirmar exclusão de <b>{{ selectedUser.name }}</b>?</p>
+          <div class="action-buttons-center"><button class="btn-ghost" (click)="closeModals()">Não</button><button class="btn-danger rounded-pill" (click)="deleteUser()" [disabled]="isLoading"><div *ngIf="isLoading" class="spinner"></div><span *ngIf="!isLoading">Sim</span></button></div>
+        </div>
+      </div>
+  </div>
+
+  <div class="toast-notification" [ngClass]="{'show': toast.visible, 'success': toast.type === 'success', 'error': toast.type === 'error', 'info': toast.type === 'info'}">
+    <div class="toast-icon">
+      <svg *ngIf="toast.type === 'success'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <svg *ngIf="toast.type === 'error'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      <svg *ngIf="toast.type === 'info'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    </div>
+    <span class="toast-message">{{ toast.message }}</span>
+  </div>
+
+</div>
+
+<div class="modal-overlay" *ngIf="showGenericSuccessModal">
+    <div class="modal-card small-modal fade-in-up">
+      <div class="modal-body text-center" style="padding-top: 30px; padding-bottom: 30px;">
+        
+        <div class="success-checkmark-anim">
+          <div class="check-icon">
+            <span class="icon-line line-tip"></span>
+            <span class="icon-line line-long"></span>
+            <div class="icon-circle"></div>
+            <div class="icon-fix"></div>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 16px; color: var(--text-main);">
+          {{ genericSuccessTitle }}
+        </h3>
+        
+        <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px; line-height: 1.5;">
+          {{ genericSuccessMessage }}
+        </p>
+
+        <div class="action-buttons-center" style="margin-top: 24px;">
+          <button class="btn-primary rounded-pill full-width" (click)="closeModals()">
+            OK, Entendi
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>

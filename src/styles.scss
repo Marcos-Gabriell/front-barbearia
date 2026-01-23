@@ -1,1 +1,97 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+// --- THEME VARIABLES ---
+:root {
+  /* --- LIGHT THEME (DEFAULT) --- */
+  --font-main: 'Inter', sans-serif;
+  
+  --bg-body: #f1f5f9;           // Page background (very light gray)
+  --bg-card: #ffffff;           // Card background (white)
+  --bg-sidebar: #ffffff;        // Sidebar background
+  
+  --text-main: #1e293b;         // Main text (almost black)
+  --text-muted: #64748b;        // Secondary text
+  
+  --border-color: #e2e8f0;      // Borders
+  
+  --primary: #10b981;           // Green (Barbershop)
+  --primary-hover: #059669;
+}
+
+// --- DARK THEME ---
+.dark-theme {
+  /* Page background: Soft black */
+  --bg-body: #09090b; 
+  
+  /* Cards/Widgets: Dark gray (for contrast) */
+  --bg-card: #18181b;
+
+  /* Sidebar: Same as body for this theme style */
+  --bg-sidebar: #09090b;
+  
+  --text-main: #f4f4f5;
+  --text-muted: #a1a1aa;
+  
+  --border-color: #27272a;
+  
+  --primary: #34d399;           
+  --primary-hover: #10b981;
+}
+
+// --- GLOBAL RESETS ---
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease; // Smooth theme transition
+}
+
+// --- TOAST ANIMATIONS & STYLES ---
+@keyframes toastSlideIn {
+  0% { transform: translateX(100%); opacity: 0; }
+  60% { transform: translateX(-10%); opacity: 1; }
+  80% { transform: translateX(5%); }
+  100% { transform: translateX(0); }
+}
+
+// Angular Material Snack Bar Overrides
+.mat-mdc-snack-bar-container {
+  margin-top: 20px !important;
+  margin-right: 20px !important;
+
+  &.toast-success .mdc-snackbar__surface { background-color: #10b981 !important; }
+  &.toast-error .mdc-snackbar__surface { background-color: #dc2626 !important; }
+  &.toast-warn .mdc-snackbar__surface { background-color: #f59e0b !important; }
+  &.toast-info .mdc-snackbar__surface { background-color: #2563eb !important; }
+
+  .mdc-snackbar__surface {
+    border-radius: 8px !important; // Slightly more rounded
+    padding: 14px 20px !important;
+    min-width: 300px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+    
+    animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .mdc-snackbar__label {
+    color: #ffffff !important;
+    font-family: var(--font-main);
+    font-weight: 500;
+    font-size: 14px !important;
+    letter-spacing: 0.2px;
+  }
+
+  .mdc-button {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    margin-left: 16px;
+    font-weight: 600;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+}

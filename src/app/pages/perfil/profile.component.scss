@@ -1,0 +1,331 @@
+@use 'sass:color';
+
+$primary: var(--primary);
+$accent: #2563eb;
+$danger: #ef4444;
+$success: #10b981;
+
+$text-main: var(--text-main);
+$text-muted: var(--text-muted);
+$border-color: var(--border-color);
+$bg-card: var(--bg-card);
+$bg-body: var(--bg-body);
+
+/* --- ESTRUTURA DA PÁGINA --- */
+.page-container {
+  max-width: 800px;
+  margin: 40px auto; 
+  padding: 0 20px;
+
+  @media (max-width: 600px) {
+    margin: 20px 10% 20px auto;
+    padding: 0 16px;
+    max-width: 79%;
+  }
+}
+
+/* --- REGRAS DE TEXTO (CORRIGIDAS) --- */
+/* Isso garante que nomes e emails longos não quebrem o layout */
+.text-truncate,
+.text-truncate-header,
+.email-value,
+.name-value {
+  display: block;
+  max-width: 100%;
+  
+  /* Desktop: Mostra tudo */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+
+  /* Mobile: Corta com reticências (...) */
+  @media (max-width: 600px) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.page-header {
+  margin-bottom: 24px;
+  
+  @media (max-width: 600px) {
+    margin-top: 65px;
+  }
+  
+  .header-title {
+    h1 { font-size: 24px; font-weight: 700; color: $text-main; margin: 0; }
+    p { color: $text-muted; font-size: 14px; margin: 4px 0 0; }
+  }
+}
+
+.profile-main-card {
+  background: $bg-card; 
+  border-radius: 16px; 
+  border: 1px solid $border-color;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.profile-summary {
+  padding: 32px; display: flex; align-items: center; gap: 20px;
+  background: $bg-card;
+  border-bottom: 1px solid $border-color;
+  
+  @media (max-width: 600px) { padding: 24px 16px; gap: 16px; }
+  
+  .avatar-circle-xl {
+    width: 80px; height: 80px; 
+    background: rgba(37, 99, 235, 0.1); 
+    color: $accent;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 700; 
+    border: 4px solid $bg-card; 
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    @media (max-width: 600px) { width: 60px; height: 60px; font-size: 24px; }
+  }
+  
+  .summary-text {
+    flex: 1; overflow: hidden;
+    /* Adicionado min-width 0 aqui também por segurança */
+    min-width: 0; 
+    h2 { margin: 0 0 6px 0; font-size: 20px; color: $text-main; }
+  }
+}
+
+.divider { height: 1px; background: $border-color; width: 100%; }
+
+.fields-list { padding: 0; }
+
+/* --- LISTA DE CAMPOS (CORRIGIDA) --- */
+.field-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 24px 32px;
+  border-bottom: 1px solid $border-color;
+  transition: background 0.2s;
+  
+  /* Padding reduzido no mobile */
+  @media (max-width: 600px) { padding: 16px; gap: 12px; }
+  
+  &:last-child { border-bottom: none; }
+  
+  &:hover { 
+    background: rgba(0,0,0,0.02); 
+    .btn-icon-edit { opacity: 1; background: $bg-card; box-shadow: 0 2px 4px rgba(0,0,0,0.05); } 
+  }
+
+  .field-icon-wrapper {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; /* Garante que o ícone não amasse */
+    
+    &.blue { background: rgba(37, 99, 235, 0.1); color: $accent; }
+    &.purple { background: rgba(126, 34, 206, 0.1); color: #a855f7; }
+    &.orange { background: rgba(234, 88, 12, 0.1); color: #f97316; }
+    &.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+  }
+
+  /* --- PONTO CRÍTICO DA CORREÇÃO --- */
+  .field-info {
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    
+    /* Esta linha impede o texto de empurrar o layout */
+    min-width: 0; 
+
+    .label { font-size: 12px; font-weight: 600; color: $text-muted; text-transform: uppercase; margin-bottom: 2px; }
+    .value { font-size: 16px; font-weight: 500; color: $text-main; }
+    .password-mask { letter-spacing: 2px; color: $text-muted; font-size: 20px; line-height: 14px; }
+    
+    .pending-badge {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; color: #d97706; font-weight: 600; margin-top: 4px;
+      /* Previne quebra no badge também */
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+  }
+
+  .btn-icon-edit {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid $border-color; background: transparent;
+    color: $text-muted; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; opacity: 0.6;
+    flex-shrink: 0; /* Garante que o botão não suma */
+    &:hover { color: $accent; border-color: $accent; transform: scale(1.05); opacity: 1; }
+  }
+}
+
+/* --- MODAIS E INPUTS --- */
+.modal-overlay {
+  position: fixed; inset: 0; 
+  background: rgba(0, 0, 0, 0.6); 
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; backdrop-filter: blur(4px); padding: 16px;
+}
+
+.modal-card {
+  background: $bg-card; 
+  width: 100%; max-width: 420px;
+  border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+  border: 1px solid $border-color;
+  overflow: hidden; display: flex; flex-direction: column;
+
+  .modal-header {
+    padding: 16px 24px; border-bottom: 1px solid $border-color;
+    display: flex; justify-content: space-between; align-items: center;
+    h2 { margin: 0; font-size: 18px; font-weight: 700; color: $text-main; }
+  }
+
+  .modal-body { padding: 24px; }
+
+  .modal-footer {
+    padding: 16px 24px; 
+    background: rgba(0,0,0,0.02); 
+    border-top: 1px solid $border-color;
+    display: flex; justify-content: flex-end; gap: 10px;
+    &.no-padding { margin-top: 24px; padding: 0; background: transparent; border: none; }
+  }
+}
+
+.form-group {
+  margin-bottom: 16px;
+  label { display: block; font-size: 14px; font-weight: 600; color: $text-main; margin-bottom: 8px; }
+}
+
+.modern-input {
+  width: 100%; padding: 10px 14px; 
+  border: 1px solid $border-color; border-radius: 8px;
+  background: $bg-card; 
+  font-size: 14px; color: $text-main; 
+  outline: none; box-sizing: border-box;
+  &:focus { border-color: $accent; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+}
+
+.password-input-wrapper {
+  position: relative; display: flex; align-items: center;
+  .modern-input { padding-right: 45px; }
+  .eye-btn {
+    position: absolute; right: 12px; background: none; border: none; cursor: pointer;
+    color: $text-muted; display: flex; align-items: center; padding: 4px; transition: color 0.2s;
+    &:hover { color: $text-main; }
+  }
+}
+
+.code-input {
+  font-family: monospace; font-size: 24px; letter-spacing: 12px; text-align: center;
+  padding: 14px; font-weight: 700; color: $primary; background: $bg-card;
+  border: 1px solid $border-color; border-radius: 8px;
+  &::placeholder { letter-spacing: 12px; color: $text-muted; opacity: 0.3; }
+}
+
+.error-msg { font-size: 12px; color: $danger; margin-top: 4px; }
+
+.close-btn-circle {
+  width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; color: $text-muted;
+  &:hover { background: rgba(0,0,0,0.05); color: $danger; }
+}
+
+.btn-primary {
+  background: $primary; color: white; border: none; padding: 10px 20px;
+  border-radius: 50px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  &:disabled { opacity: 0.7; cursor: not-allowed; }
+}
+
+.btn-ghost {
+  background: $bg-card; border: 1px solid $border-color; color: $text-muted;
+  padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
+  &:hover { background: rgba(0,0,0,0.05); color: $text-main; }
+}
+
+.badge {
+  padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase;
+  &.dev { background: rgba(126, 34, 206, 0.15); color: #a855f7; }
+  &.admin { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+  &.staff { background: rgba(37, 99, 235, 0.15); color: #3b82f6; }
+}
+
+/* --- LOADING E ANIMAÇÕES --- */
+.loading-state { text-align: center; padding: 40px; color: $text-muted; }
+
+.spinner { width: 24px; height: 24px; border: 3px solid $border-color; border-top-color: $accent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+.spinner-small { width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.fade-in { animation: fadeIn 0.4s ease; }
+.fade-in-up { animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-up { animation: slideUp 0.5s ease-out forwards; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- ANIMAÇÃO DE SUCESSO --- */
+.success-checkmark-anim {
+  width: 80px; height: 115px; margin: 0 auto;
+  
+  .check-icon {
+    width: 80px; height: 80px; position: relative; border-radius: 50%;
+    box-sizing: content-box; border: 4px solid #10b981;
+    
+    &::before {
+      top: 3px; left: -2px; width: 30px; transform-origin: 100% 50%; border-radius: 100px 0 0 100px;
+    }
+    
+    &::after {
+      top: 0; left: 30px; width: 60px; transform-origin: 0 50%; border-radius: 0 100px 100px 0;
+      animation: rotate-circle 4.25s ease-in;
+    }
+    
+    &::before, &::after {
+      content: ''; height: 100px; position: absolute; background: var(--bg-card); 
+      transform: rotate(-45deg);
+    }
+    
+    .icon-line {
+      height: 5px; background-color: #10b981; display: block; border-radius: 2px;
+      position: absolute; z-index: 10;
+      
+      &.line-tip {
+        top: 46px; left: 14px; width: 25px; transform: rotate(45deg); animation: icon-line-tip 0.75s;
+      }
+      
+      &.line-long {
+        top: 38px; right: 8px; width: 47px; transform: rotate(-45deg); animation: icon-line-long 0.75s;
+      }
+    }
+    
+    .icon-circle {
+      top: -4px; left: -4px; z-index: 10; width: 80px; height: 80px; border-radius: 50%;
+      position: absolute; box-sizing: content-box; border: 4px solid rgba(16, 185, 129, 0.5);
+    }
+    
+    .icon-fix {
+      top: 8px; width: 5px; left: 26px; z-index: 1; height: 85px; position: absolute;
+      transform: rotate(-45deg); background-color: var(--bg-card);
+    }
+  }
+}
+
+@keyframes rotate-circle {
+  0% { transform: rotate(-45deg); }
+  5% { transform: rotate(-45deg); }
+  12% { transform: rotate(-405deg); }
+  100% { transform: rotate(-405deg); }
+}
+
+@keyframes icon-line-tip {
+  0% { width: 0; left: 1px; top: 19px; }
+  54% { width: 0; left: 1px; top: 19px; }
+  70% { width: 50px; left: -8px; top: 37px; }
+  84% { width: 17px; left: 21px; top: 48px; }
+  100% { width: 25px; left: 14px; top: 46px; }
+}
+
+@keyframes icon-line-long {
+  0% { width: 0; right: 46px; top: 54px; }
+  65% { width: 0; right: 46px; top: 54px; }
+  84% { width: 55px; right: 0px; top: 35px; }
+  100% { width: 47px; right: 8px; top: 38px; }
+}

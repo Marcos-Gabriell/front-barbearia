@@ -1,9 +1,32 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
-
+import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import { routes } from './app.routes';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
+
+import { LucideAngularModule, User, Mail, Shield, CheckCircle, AlertCircle, Loader2, Clock, Calendar, ChevronRight, Lock } from 'lucide-angular';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes), provideClientHydration(withEventReplay())]
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(
+      withFetch(),
+      withInterceptors([authInterceptor])
+    ),
+    provideAnimations(),
+    
+    importProvidersFrom(LucideAngularModule.pick({ 
+      User, 
+      Mail, 
+      Shield, 
+      CheckCircle, 
+      AlertCircle, 
+      Loader2, 
+      Clock, 
+      Calendar, 
+      ChevronRight, 
+      Lock 
+    })),
+  ],
 };
