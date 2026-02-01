@@ -23,7 +23,7 @@ export interface UserRequest {
 }
 
 export interface ApiResponse<T> {
-  message?: string;
+  message: string;
   data: T;
   token?: string;
 }

@@ -1,0 +1,123 @@
+@use 'sass:color';
+
+$primary: var(--primary, #0f172a);
+$primary-hover: var(--primary-hover, #1e293b);
+$accent: #2563eb; 
+$danger: #ef4444;
+$success: #10b981;
+$warning: #f59e0b;
+
+$text-main: var(--text-main, #0f172a);
+$text-muted: var(--text-muted, #94a3b8);
+$border-color: var(--border-color, #e2e8f0);
+$bg-card: var(--bg-card, #ffffff);
+$bg-body: var(--bg-body, #f8fafc);
+
+// --- ESTILOS DO MODAL ---
+.modal-overlay { 
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); padding: 16px; 
+  @media (max-width: 600px) { padding: 0; align-items: flex-end; }
+}
+
+.modal-card { 
+  background: $bg-card; width: 100%; max-width: 420px; border-radius: 20px; border: 1px solid $border-color; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; 
+  @media (max-width: 600px) { max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; border: none; }
+  &.small-modal { max-width: 340px; @media (max-width: 600px) { max-width: 90%; height: auto; border-radius: 20px; margin-bottom: 20px; } } 
+  .modal-header { padding: 16px 24px; border-bottom: 1px solid $border-color; display: flex; justify-content: space-between; align-items: center; h2 { margin: 0; font-size: 18px; font-weight: 700; color: $text-main; } } 
+  .modal-body { padding: 24px; overflow-y: auto; flex: 1; } 
+  .modal-footer { padding: 16px 24px; background: rgba(0,0,0,0.02); display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid $border-color; } 
+}
+
+// --- CUSTOM INPUT DE NÚMERO (DURAÇÃO) ---
+.custom-number-input {
+  display: flex; align-items: center; justify-content: space-between; // Garante distribuição
+  border: 1px solid $border-color; border-radius: 12px; background: $bg-card; overflow: hidden; transition: all 0.2s; height: 46px; 
+  &.error-border { border-color: $danger; background: rgba(239, 68, 68, 0.02); }
+  
+  .btn-step {
+    background: transparent; border: none; width: 40px; // Largura fixa segura
+    height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: $text-muted; transition: background 0.2s; 
+    flex-shrink: 0; // <--- OBRIGA O BOTÃO A NÃO ENCOLHER
+    &:hover { background: rgba(0,0,0,0.05); color: $primary; } &:active { background: rgba(0,0,0,0.1); }
+  }
+  
+  .input-no-spinner {
+    flex: 1; 
+    min-width: 0; // Permite que o input encolha se necessário, mas os botões ficam
+    text-align: center; border: none; background: transparent; font-size: 14px; font-weight: 600; color: $text-main; outline: none; padding: 0; appearance: textfield;
+    &::-webkit-outer-spin-button, &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  }
+  
+  .unit { 
+    font-size: 12px; color: $text-muted; margin-right: 8px; font-weight: 500; 
+    flex-shrink: 0; // <--- OBRIGA A UNIDADE A NÃO SUMIR
+  }
+}
+
+// --- INPUTS GERAIS ---
+.modern-input, .modern-textarea { 
+  width: 100%; padding: 12px 16px; border: 1px solid $border-color; border-radius: 12px; font-size: 14px; color: $text-main; outline: none; background: $bg-card; transition: all 0.2s; box-sizing: border-box; 
+  &:focus { border-color: $accent; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); } 
+  &.error-border { border-color: $danger; box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2); }
+}
+
+// --- ALERT ERROR BOX ---
+.alert-error-box {
+  background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; gap: 12px; align-items: flex-start; animation: fadeIn 0.3s ease;
+  .icon-wrapper { color: $danger; display: flex; align-items: center; margin-top: 2px; }
+  .error-content { display: flex; flex-direction: column; gap: 2px; strong { color: $danger; font-size: 13px; font-weight: 700; } span { color: $text-main; font-size: 13px; line-height: 1.4; } }
+}
+
+// --- SELETOR DE USUÁRIOS ---
+.responsibles-selector {
+  border: 1px solid $border-color; border-radius: 12px; padding: 12px; background: rgba(0,0,0,0.01); transition: all 0.2s;
+  &.error-border { border-color: $danger; background: rgba(239, 68, 68, 0.02); }
+  .btn-select-users {
+    width: 100%; padding: 10px; border: 1px dashed $border-color; background: $bg-card; color: $text-main; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;
+    &:hover { border-color: $accent; color: $accent; background: rgba($accent, 0.05); }
+  }
+  .selected-list-preview { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+}
+
+// --- SUCCESS MODAL STYLES ---
+.success-title { color: $text-main; margin: 0; }
+.success-message { color: $text-muted; margin: 0; }
+
+// --- RESTANTE DOS ESTILOS ---
+.details-content { display: flex; flex-direction: column; gap: 20px; .details-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid $border-color; padding-bottom: 16px; h3 { margin: 0; font-size: 20px; color: $text-main; } } .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; .detail-box { background: $bg-body; border-radius: 12px; padding: 12px; border: 1px solid $border-color; display: flex; flex-direction: column; gap: 4px; .value { font-size: 16px; font-weight: 700; color: $text-main; } .value.price { color: $primary; font-size: 18px; } } } .detail-section { display: flex; flex-direction: column; gap: 8px; .text-block { background: $bg-body; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.5; color: $text-main; margin: 0; border: 1px solid $border-color; } } .users-grid { display: flex; flex-wrap: wrap; gap: 8px; .user-chip { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; background: rgba($accent, 0.08); border: 1px solid rgba($accent, 0.2); color: $text-main; font-weight: 600; font-size: 13px; .avatar-mini { width: 24px; height: 24px; background: $accent; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; } } } .detail-meta { border-top: 1px dashed $border-color; padding-top: 12px; font-size: 12px; color: $text-muted; text-align: right; } .label { font-size: 12px; font-weight: 700; color: $text-muted; text-transform: uppercase; letter-spacing: 0.5px; } }
+.spaced-top { margin-top: 12px; }
+.hint.error-msg { color: $danger; display: flex; align-items: center; gap: 6px; font-weight: 600; margin-top: 10px; }
+.user-selection-list { display: flex; flex-direction: column; gap: 8px; }
+.checkbox-item .custom-checkbox { display: flex; align-items: center; padding: 12px 14px; border: 1px solid $border-color; border-radius: 10px; cursor: pointer; transition: all 0.2s; user-select: none; position: relative; background: $bg-card; &:hover { border-color: $accent; } input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; } .checkmark { height: 20px; width: 20px; background-color: transparent; border: 2px solid $border-color; border-radius: 6px; margin-right: 12px; position: relative; transition: all 0.2s; flex-shrink: 0; &::after { content: ""; position: absolute; display: none; left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); } } input:checked ~ .checkmark { background-color: $primary; border-color: $primary; &::after { display: block; } } &:has(input:checked) { background: rgba(15, 23, 42, 0.03); border-color: $primary; } .user-info-row { display: flex; justify-content: space-between; flex: 1; align-items: center; .user-name { font-weight: 600; color: $text-main; } .user-id { font-size: 12px; color: $text-muted; } } }
+.modal-footer.space-between { justify-content: space-between; align-items: center; }
+.pagination-mini { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: $text-muted; .icon-btn-mini { width: 28px; height: 28px; border-radius: 50%; border: 1px solid $border-color; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; &:hover:not(:disabled) { background: rgba(0,0,0,0.05); color: $text-main; } &:disabled { opacity: 0.4; cursor: not-allowed; } } }
+.actions { display: flex; gap: 10px; }
+.page-container { max-width: 900px; margin: 40px auto; padding: 0 20px; @media (max-width: 768px) { margin: 80px 20px 20px 0; padding: 0 16px; max-width: 85%; } @media (max-width: 480px) { margin: 80px auto 20px 0; padding: 0 30px; max-width: 75%; } }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; .header-title { h1 { font-size: 24px; font-weight: 800; color: $text-main; margin: 0; } p { color: $text-muted; font-size: 14px; margin: 6px 0 0; } } @media (max-width: 600px) { flex-direction: column; align-items: flex-start; gap: 16px; .header-title, .btn-primary { width: 100%; } .btn-primary { justify-content: center; } } }
+.services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; @media (max-width: 650px) { grid-template-columns: 1fr; } }
+.service-card { display: flex; flex-direction: column; height: 100%; transition: transform 0.2s, box-shadow 0.2s; &:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -8px rgba(0,0,0,0.15); } .card-content { padding: 24px; flex: 1; display: flex; flex-direction: column; .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; h3 { margin: 0; font-size: 18px; font-weight: 700; color: $text-main; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; } } .price { font-size: 22px; font-weight: 800; color: $primary; margin-bottom: 6px; letter-spacing: -0.5px; } .description { color: $text-muted; font-size: 14px; line-height: 1.5; margin-bottom: 24px; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .meta-row { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px dashed rgba($border-color, 0.6); .time-badge { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: $text-muted; svg { opacity: 0.8; } } .actions-group { display: flex; gap: 6px; .icon-btn { background: transparent; border: none; color: $text-muted; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; &:hover { background: rgba(0,0,0,0.04); color: $text-main; } &.edit:hover { color: $accent; background: rgba($accent, 0.1); } &.delete:hover { color: $danger; background: rgba($danger, 0.1); } svg { width: 18px; height: 18px; } } } } } }
+.pill { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; border: 1px solid $border-color; background: rgba($accent, 0.10); color: $text-main; font-size: 12px; font-weight: 800; }
+.hint { font-size: 12px; color: $text-muted; margin-bottom: 8px; }
+.text-right { text-align: right; }
+.error-text { margin-top: 8px; font-size: 12px; color: $danger; font-weight: 800; }
+.pagination-area { margin-top: 40px; display: flex; justify-content: center; align-items: center; gap: 20px; .page-info { font-size: 14px; font-weight: 600; color: $text-muted; } .page-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid $border-color; background: $bg-card; color: $text-main; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; &:hover:not(:disabled) { border-color: $primary; color: $primary; transform: translateY(-2px); } &:disabled { opacity: 0.4; cursor: not-allowed; } } }
+.btn-primary { background: $primary; color: white; border: none; padding: 10px 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 100px; border-radius: 8px; transition: all 0.2s; &:hover { background: $primary-hover; transform: translateY(-1px); } &.rounded-pill { border-radius: 50px; } &.full-width { width: 100%; justify-content: center; } &:disabled { opacity: 0.7; cursor: not-allowed; transform: none; } }
+.btn-danger { background: $danger; color: white; border: none; padding: 10px 24px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 80px; border-radius: 8px; &.rounded-pill { border-radius: 50px; } &:hover { filter: brightness(90%); } &:disabled { opacity: 0.7; cursor: not-allowed; } }
+.btn-ghost { background: transparent; color: $text-muted; border: 1px solid transparent; padding: 10px 20px; font-weight: 600; cursor: pointer; border-radius: 8px; &:hover { background: rgba(0,0,0,0.05); color: $text-main; } }
+.card { background: $bg-card; border-radius: 16px; border: 1px solid $border-color; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; &.status { &.active { background: rgba(16, 185, 129, 0.15); color: #10b981; } &.inactive { background: rgba(239, 68, 68, 0.15); color: $danger; } } }
+.form-group { margin-bottom: 20px; position: relative; label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: $text-main; } }
+.modern-textarea { resize: vertical; min-height: 100px; font-family: inherit; &.no-resize { resize: none; height: 100px; } }
+.close-btn-circle { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: $text-muted; transition: all 0.2s; &:hover { background: rgba(0,0,0,0.05); color: $text-main; transform: rotate(90deg); } &:active { transform: scale(0.9); } }
+.warning-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; background: rgba(239, 68, 68, 0.1); &.yellow{ background: rgba(245, 158, 11, 0.1); } }
+.action-buttons-center { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+.text-center { text-align: center; }
+.fade-in { animation: fadeIn 0.4s ease-out; } .fade-in-up { animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); } 
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.spinner { width: 18px; height: 18px; border: 2px solid #ffffff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+.empty-state { text-align: center; padding: 60px 20px; color: $text-muted; }
+.success-checkmark-anim { width: 80px; height: 115px; margin: 0 auto; .check-icon { width: 80px; height: 80px; position: relative; border-radius: 50%; box-sizing: content-box; border: 4px solid #10b981; &::before { top: 3px; left: -2px; width: 30px; transform-origin: 100% 50%; border-radius: 100px 0 0 100px; } &::after { top: 0; left: 30px; width: 60px; transform-origin: 0 50%; border-radius: 0 100px 100px 0; animation: rotate-circle 4.25s ease-in; } &::before, &::after { content: ''; height: 100px; position: absolute; background: $bg-card; transform: rotate(-45deg); } .icon-line { height: 5px; background-color: #10b981; display: block; border-radius: 2px; position: absolute; z-index: 10; &.line-tip { top: 46px; left: 14px; width: 25px; transform: rotate(45deg); animation: icon-line-tip 0.75s; } &.line-long { top: 38px; right: 8px; width: 47px; transform: rotate(-45deg); animation: icon-line-long 0.75s; } } .icon-circle { top: -4px; left: -4px; z-index: 10; width: 80px; height: 80px; border-radius: 50%; position: absolute; box-sizing: content-box; border: 4px solid rgba(16, 185, 129, 0.5); } .icon-fix { top: 8px; width: 5px; left: 26px; z-index: 1; height: 85px; position: absolute; transform: rotate(-45deg); background-color: $bg-card; } } }
+@keyframes rotate-circle { 0% { transform: rotate(-45deg); } 5% { transform: rotate(-45deg); } 12% { transform: rotate(-405deg); } 100% { transform: rotate(-405deg); } }
+@keyframes icon-line-tip { 0% { width: 0; left: 1px; top: 19px; } 54% { width: 0; left: 1px; top: 19px; } 70% { width: 50px; left: -8px; top: 37px; } 84% { width: 17px; left: 21px; top: 48px; } 100% { width: 25px; left: 14px; top: 46px; } }
+@keyframes icon-line-long { 0% { width: 0; right: 46px; top: 54px; } 65% { width: 0; right: 46px; top: 54px; } 84% { width: 55px; right: 0px; top: 35px; } 100% { width: 47px; right: 8px; top: 38px; } }

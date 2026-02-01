@@ -15,6 +15,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   users: User[] = [];
   isLoading = false;
   currentUserId: number | null = null;
+  currentUserRole: string | null = null; // Armazena a role do usuário logado
 
   currentPage = 1;
   itemsPerPage = 10;
@@ -47,7 +48,9 @@ export class UsersComponent implements OnInit, OnDestroy {
   form: FormGroup;
   submitted = false; 
   
-  roles: UserRole[] = ['STAFF', 'ADMIN', 'DEV'];
+  // Lista de roles que será filtrada dinamicamente
+  availableRoles: UserRole[] = [];
+  
   emailDomains = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com.br', 'live.com', 'icloud.com'];
   emailSuggestions: string[] = [];
 
@@ -63,11 +66,18 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Carrega o perfil PRIMEIRO para saber quem é o usuário logado
     this.userService.getProfile().subscribe({
-      next: (user) => { this.currentUserId = user.id; },
+      next: (user) => { 
+        this.currentUserId = user.id; 
+        this.currentUserRole = user.role; 
+        
+        // SÓ carrega a lista depois de saber a role do usuário logado
+        // para aplicar o filtro corretamente
+        this.loadUsers();
+      },
       error: (err) => console.error('Erro ao carregar perfil:', err)
     });
-    this.loadUsers();
     
     this.form.get('email')?.valueChanges.subscribe(val => this.handleEmailSuggestions(val));
   }
@@ -102,13 +112,29 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.emailSuggestions = [];
   }
 
+  // Lógica de permissão de criação (Mantida conforme pedido anterior)
+  updateAvailableRoles() {
+    if (this.currentUserRole === 'DEV') {
+      this.availableRoles = ['STAFF', 'ADMIN', 'DEV'];
+    } else if (this.currentUserRole === 'ADMIN') {
+      this.availableRoles = ['STAFF'];
+    } else {
+      this.availableRoles = ['STAFF'];
+    }
+  }
+
   openCreate() {
     this.isEditing = false;
     this.selectedUser = null;
     this.submitted = false;
+    this.updateAvailableRoles();
+
     this.form.get('name')?.clearValidators();
     this.form.get('name')?.updateValueAndValidity();
-    this.form.reset({ role: 'STAFF' });
+    
+    const defaultRole = (this.availableRoles.length === 1) ? this.availableRoles[0] : 'STAFF';
+    this.form.reset({ role: defaultRole });
+
     this.showFormModal = true;
     this.emailSuggestions = [];
   }
@@ -117,6 +143,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.isEditing = true;
     this.selectedUser = user;
     this.submitted = false;
+    this.updateAvailableRoles();
+
     this.form.get('name')?.setValidators([Validators.required, Validators.minLength(3)]);
     this.form.get('name')?.updateValueAndValidity();
     this.form.patchValue({
@@ -145,7 +173,6 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.userService.update(this.selectedUser.id, req).subscribe({
         next: () => {
           this.loadUsers();
-          
           this.showFormModal = false;
           this.genericSuccessTitle = 'Alterações Salvas!';
           this.genericSuccessMessage = 'Os dados do usuário foram atualizados com sucesso.';
@@ -181,12 +208,10 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.userService.delete(this.selectedUser.id).subscribe({
           next: () => { 
             this.loadUsers(); 
-            
             this.showDeleteModal = false;
             this.genericSuccessTitle = 'Usuário Excluído!';
             this.genericSuccessMessage = 'O usuário foi removido do sistema com sucesso.';
             this.showGenericSuccessModal = true;
-
             this.isLoading = false;
           },
           error: () => { 
@@ -231,7 +256,17 @@ export class UsersComponent implements OnInit, OnDestroy {
   loadUsers() {
     this.isLoading = true;
     this.userService.list().subscribe({
-      next: (data) => { this.users = data.filter(u => u.role !== 'DEV'); this.isLoading = false; },
+      next: (data) => { 
+        // LÓGICA DE FILTRAGEM ALTERADA AQUI
+        if (this.currentUserRole === 'DEV') {
+            // Se sou DEV, vejo todo mundo (incluindo outros DEVs)
+            this.users = data;
+        } else {
+            // Se sou ADMIN ou STAFF, filtro para NÃO ver DEVs
+            this.users = data.filter(u => u.role !== 'DEV'); 
+        }
+        this.isLoading = false; 
+      },
       error: () => { this.isLoading = false; }
     });
   }

@@ -1,5 +1,5 @@
 <div class="page-container fade-in">
-  
+
   <header class="page-header">
     <div class="header-title">
       <h1>Meu Perfil</h1>
@@ -13,7 +13,7 @@
   </div>
 
   <div *ngIf="!isLoading()" class="card profile-main-card animate-up">
-    
+
     <div class="profile-summary">
       <div class="avatar-circle-xl">{{ user()?.name?.charAt(0) }}</div>
       <div class="summary-text">
@@ -25,7 +25,7 @@
     <div class="divider"></div>
 
     <div class="fields-list">
-      
+
       <div class="field-row">
         <div class="field-icon-wrapper blue">
           <lucide-icon [name]="icons.UserIcon" class="w-5 h-5"></lucide-icon>
@@ -49,7 +49,7 @@
             {{ user()?.email }}
           </span>
           <span *ngIf="user()?.pendingEmail" class="pending-badge email-value" [title]="user()?.pendingEmail">
-            <lucide-icon [name]="icons.Clock" class="w-3 h-3"></lucide-icon> 
+            <lucide-icon [name]="icons.Clock" class="w-3 h-3"></lucide-icon>
             Pendente: {{ user()?.pendingEmail }}
           </span>
         </div>
@@ -84,9 +84,28 @@
         </button>
       </div>
 
+      <!-- ✅ DISPONIBILIDADE -->
+      <div class="field-row">
+        <div class="field-icon-wrapper teal">
+          <lucide-icon [name]="icons.CalendarDays" class="w-5 h-5"></lucide-icon>
+        </div>
+        <div class="field-info">
+          <span class="label">Disponibilidade</span>
+          <span class="value">Defina seus horários e pausas</span>
+        </div>
+        <button class="btn-icon-edit" (click)="openModal('SCHEDULE')" title="Configurar Disponibilidade">
+          <lucide-icon [name]="icons.Edit2" class="w-4 h-4"></lucide-icon>
+        </button>
+      </div>
+
     </div>
   </div>
 
+  <!-- =======================
+       MODAIS EXISTENTES (NAME, EMAIL, PHONE, PASSWORD)
+  ======================== -->
+
+  <!-- MODAL NAME -->
   <div class="modal-overlay" *ngIf="activeModal() === 'NAME'">
     <div class="modal-card fade-in-up">
       <div class="modal-header">
@@ -116,6 +135,7 @@
     </div>
   </div>
 
+  <!-- MODAL EMAIL -->
   <div class="modal-overlay" *ngIf="activeModal() === 'EMAIL'">
     <div class="modal-card fade-in-up">
       <div class="modal-header">
@@ -142,7 +162,7 @@
         <div *ngIf="showEmailCodeInput()">
           <p class="text-sm text-gray-500 mb-4 text-center">Digite o código de 6 números enviado.</p>
           <div class="form-group code-input-container">
-            <input type="text" class="modern-input code-input" [value]="verificationCode()" 
+            <input type="text" class="modern-input code-input" [value]="verificationCode()"
                    (input)="onCodeInput($event)" maxlength="6" inputmode="numeric" placeholder="0 0 0 0 0 0">
           </div>
           <div class="modal-footer no-padding">
@@ -157,6 +177,7 @@
     </div>
   </div>
 
+  <!-- MODAL PHONE -->
   <div class="modal-overlay" *ngIf="activeModal() === 'PHONE'">
     <div class="modal-card fade-in-up">
       <div class="modal-header">
@@ -169,9 +190,9 @@
         <div class="modal-body">
           <div class="form-group">
             <label>Celular / WhatsApp</label>
-            <input type="tel" 
-                   formControlName="phone" 
-                   class="modern-input" 
+            <input type="tel"
+                   formControlName="phone"
+                   class="modern-input"
                    placeholder="(00) 00000-0000"
                    (input)="onPhoneInput($event)"
                    maxlength="15">
@@ -188,6 +209,7 @@
     </div>
   </div>
 
+  <!-- MODAL PASSWORD -->
   <div class="modal-overlay" *ngIf="activeModal() === 'PASSWORD'">
     <div class="modal-card fade-in-up">
       <div class="modal-header">
@@ -203,40 +225,43 @@
             <div class="password-input-wrapper">
               <input [type]="showCurrentPassword() ? 'text' : 'password'" formControlName="currentPassword" class="modern-input" placeholder="••••••">
               <button type="button" class="eye-btn" (click)="togglePasswordVisibility('current')">
-                <svg *ngIf="!showCurrentPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg *ngIf="showCurrentPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                <span *ngIf="!showCurrentPassword()">👁️</span>
+                <span *ngIf="showCurrentPassword()">🙈</span>
               </button>
             </div>
             <div *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched" class="error-msg">
               Obrigatório.
             </div>
           </div>
+
           <div class="form-group">
             <label>Nova Senha</label>
             <div class="password-input-wrapper">
               <input [type]="showNewPassword() ? 'text' : 'password'" formControlName="newPassword" class="modern-input" placeholder="••••••">
               <button type="button" class="eye-btn" (click)="togglePasswordVisibility('new')">
-                <svg *ngIf="!showNewPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg *ngIf="showNewPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                <span *ngIf="!showNewPassword()">👁️</span>
+                <span *ngIf="showNewPassword()">🙈</span>
               </button>
             </div>
             <div *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched" class="error-msg">
               Mínimo de 6 caracteres.
             </div>
           </div>
+
           <div class="form-group">
             <label>Confirmar Nova Senha</label>
             <div class="password-input-wrapper">
               <input [type]="showConfirmPassword() ? 'text' : 'password'" formControlName="confirmNewPassword" class="modern-input" placeholder="••••••">
               <button type="button" class="eye-btn" (click)="togglePasswordVisibility('confirm')">
-                <svg *ngIf="!showConfirmPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg *ngIf="showConfirmPassword()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                <span *ngIf="!showConfirmPassword()">👁️</span>
+                <span *ngIf="showConfirmPassword()">🙈</span>
               </button>
             </div>
             <div *ngIf="passwordForm.errors?.['mismatch'] && passwordForm.get('confirmNewPassword')?.touched" class="error-msg">
               As senhas não conferem.
             </div>
           </div>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-ghost" (click)="closeModal()">Cancelar</button>
@@ -249,10 +274,167 @@
     </div>
   </div>
 
+  <!-- =======================
+       ✅ MODAL AGENDA COM FILTROS E ANIMAÇÕES
+  ======================== -->
+  <div class="modal-overlay modal-schedule-overlay" *ngIf="activeModal() === 'SCHEDULE'">
+    <div class="modal-card modal-schedule scale-in">
+
+      <div class="modal-header">
+        <div class="modal-title-stack">
+          <h2>Configurar Disponibilidade</h2>
+          <p>Defina seus horários de trabalho e pausas.</p>
+        </div>
+
+        <button class="close-btn-circle" (click)="closeScheduleModal()">
+          <lucide-icon [name]="icons.X"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- LOADING -->
+      <div class="modal-body schedule-body" *ngIf="isScheduleLoading()">
+        <div class="schedule-loading pulse-in">
+          <div class="spinner"></div>
+          <p>Carregando sua disponibilidade...</p>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="modal-body schedule-body" *ngIf="!isScheduleLoading()">
+
+        <!-- ✅ FILTROS -->
+        <div class="filter-tabs slide-down">
+          <button 
+            class="filter-btn" 
+            [class.active]="scheduleFilter() === 'all'"
+            (click)="scheduleFilter.set('all')">
+            Todos
+          </button>
+          <button 
+            class="filter-btn" 
+            [class.active]="scheduleFilter() === 'active'"
+            (click)="scheduleFilter.set('active')">
+            Ativos
+          </button>
+          <button 
+            class="filter-btn" 
+            [class.active]="scheduleFilter() === 'inactive'"
+            (click)="scheduleFilter.set('inactive')">
+            Inativos
+          </button>
+        </div>
+
+        <div class="schedule-head">
+          <div class="hcol">Dia</div>
+          <div class="hcol center">Início</div>
+          <div class="hcol center">Fim</div>
+          <div class="hcol center">Ativo</div>
+          <div class="hcol right">Ações</div>
+        </div>
+
+        <div class="schedule-list">
+
+          <div class="day-card stagger-in" 
+               *ngFor="let day of scheduleDaysFiltered(); let i = index"
+               [class.expanded]="expandedDay() === day.dayOfWeek"
+               [class.inactive]="!day.active"
+               [style.animation-delay.ms]="i * 40">
+
+            <div class="day-row">
+              <button class="day-toggle"
+                      (click)="toggleExpand(day)"
+                      [disabled]="!day.active"
+                      [attr.aria-disabled]="!day.active"
+                      [title]="day.active ? 'Abrir/Fechar pausas' : 'Dia inativo'">
+                <span class="day-name">{{ dayLabel[day.dayOfWeek] }}</span>
+                <lucide-icon [name]="icons.ChevronDown" class="chev"
+                             [class.rotated]="expandedDay() === day.dayOfWeek"></lucide-icon>
+              </button>
+
+              <div class="col center">
+                <input type="time"
+                       class="modern-input time-input"
+                       [disabled]="!day.active"
+                       [(ngModel)]="day.startTime"
+                       name="start_{{day.dayOfWeek}}">
+              </div>
+
+              <div class="col center">
+                <input type="time"
+                       class="modern-input time-input"
+                       [disabled]="!day.active"
+                       [(ngModel)]="day.endTime"
+                       name="end_{{day.dayOfWeek}}">
+              </div>
+
+              <div class="col center">
+                <label class="toggle-switch">
+                  <input type="checkbox" [checked]="day.active" (change)="onToggleActive(day, $any($event.target).checked)">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <div class="col right">
+                <button class="btn-icon-add"
+                        (click)="addBreak(day)"
+                        [disabled]="!day.active || (day.breaks?.length || 0) >= 3"
+                        [title]="(day.breaks?.length || 0) >= 3 ? 'Máximo de 3 pausas' : 'Adicionar pausa'">
+                  <lucide-icon [name]="icons.Plus"></lucide-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- ✅ EXPAND com animação -->
+            <div class="breaks-panel expand-collapse" 
+                 *ngIf="expandedDay() === day.dayOfWeek"
+                 [@expandCollapse]>
+              <div class="breaks-header">
+                <strong>Pausas / Almoço</strong>
+              </div>
+
+              <div class="breaks-list" *ngIf="(day.breaks?.length || 0) > 0; else emptyBreaks">
+                <div class="break-row fade-in-up" 
+                     *ngFor="let br of day.breaks; let idx = index"
+                     [style.animation-delay.ms]="idx * 60">
+                  <input type="time" class="modern-input time-input" [(ngModel)]="br.start" name="bstart_{{day.dayOfWeek}}_{{idx}}">
+                  <span class="sep">até</span>
+                  <input type="time" class="modern-input time-input" [(ngModel)]="br.end" name="bend_{{day.dayOfWeek}}_{{idx}}">
+
+                  <button class="btn-icon-trash" (click)="removeBreak(day, idx)" title="Remover pausa">
+                    <lucide-icon [name]="icons.Trash2"></lucide-icon>
+                  </button>
+                </div>
+              </div>
+
+              <ng-template #emptyBreaks>
+                <div class="empty-breaks fade-in">
+                  Nenhuma pausa cadastrada.
+                </div>
+              </ng-template>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer schedule-footer" *ngIf="!isScheduleLoading()">
+        <button type="button" class="btn-ghost" (click)="closeScheduleModal()">Cancelar</button>
+
+        <button type="button" class="btn-primary rounded-pill" (click)="saveSchedule()" [disabled]="isScheduleSaving()">
+          <div *ngIf="isScheduleSaving()" class="spinner-small"></div>
+          <span *ngIf="!isScheduleSaving()">Salvar Agenda</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ✅ MODAL DE SUCESSO -->
   <div class="modal-overlay" *ngIf="showSuccessModal()">
     <div class="modal-card fade-in-up" style="max-width: 340px;">
       <div class="modal-body text-center" style="padding: 30px 24px; text-align: center;">
-        
+
         <div class="success-checkmark-anim">
           <div class="check-icon">
             <span class="icon-line line-tip"></span>
@@ -265,7 +447,7 @@
         <h3 style="margin: 20px 0 8px 0; color: var(--text-main); font-size: 20px; font-weight: 700;">
           {{ successTitle() }}
         </h3>
-        
+
         <p style="color: var(--text-muted); font-size: 14px; margin: 0 0 24px 0; line-height: 1.5;">
           {{ successMessage() }}
         </p>

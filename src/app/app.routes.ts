@@ -29,7 +29,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
   },
-  
+
+  {
+    path: 'catalogo',
+    canActivate: [authGuard, roleGuard(['DEV', 'ADMIN'])],
+    loadComponent: () =>
+      import('./pages/catalog/catalog.component').then(m => m.CatalogListComponent),
+  },
+
   {
     path: 'usuarios',
     canActivate: [authGuard, roleGuard(['DEV', 'ADMIN'])],

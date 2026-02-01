@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { UserService } from '../../core/services/users/user.service'; 
 
@@ -18,9 +18,11 @@ export class SetupAccountComponent implements OnInit {
   isLoading = true;
   isValidToken = false;
   isSuccess = false;
-  errorMessage = '';
+  
+  globalErrorMessage = '';
+  submissionError = '';
+  
   invitedEmail = '';
-
   passwordStrength = 0;
   showPassword = false;
   showConfirmPassword = false;
@@ -34,9 +36,14 @@ export class SetupAccountComponent implements OnInit {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       phone: ['', [Validators.pattern(/^\(\d{2}\) \d{5}-\d{4}$/)]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.minLength(6), this.hasNumberValidator]],
       confirmPassword: ['', [Validators.required]]
     });
+  }
+
+  hasNumberValidator(control: AbstractControl) {
+    const hasNumber = /\d/.test(control.value);
+    return hasNumber ? null : { noNumber: true };
   }
 
   ngOnInit(): void {
@@ -44,7 +51,7 @@ export class SetupAccountComponent implements OnInit {
 
     if (!this.token) {
       this.isLoading = false;
-      this.errorMessage = 'Link inválido ou expirado.';
+      this.globalErrorMessage = 'Link inválido ou expirado.';
       return;
     }
 
@@ -56,13 +63,17 @@ export class SetupAccountComponent implements OnInit {
       },
       error: (err: any) => {
         this.isLoading = false;
-        this.isValidToken = false;
-        this.errorMessage = err.error?.message || 'Este convite expirou ou é inválido.';
+        this.globalErrorMessage = err.error?.message || 'Este convite expirou.';
       }
     });
 
-    this.form.get('password')?.valueChanges.subscribe(val => this.calculateStrength(val));
+    this.form.get('password')?.valueChanges.subscribe(val => {
+        this.calculateStrength(val);
+        this.submissionError = ''; 
+    });
     
+    this.form.valueChanges.subscribe(() => this.submissionError = ''); 
+
     this.form.get('phone')?.valueChanges.subscribe(val => {
       if (val) this.formatPhone(val);
     });
@@ -70,56 +81,43 @@ export class SetupAccountComponent implements OnInit {
 
   formatPhone(value: string) {
     let numbers = value.replace(/\D/g, '');
-    
-    // 2. Limita a 11 dígitos
     if (numbers.length > 11) numbers = numbers.substring(0, 11);
-
-    // 3. Monta a formatação
     let formatted = numbers;
-    if (numbers.length > 2) {
-      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-    }
-    if (numbers.length > 7) {
-      formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
-    }
-
+    if (numbers.length > 2) formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    if (numbers.length > 7) formatted = `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
     if (formatted !== value) {
       this.form.get('phone')?.setValue(formatted, { emitEvent: false });
     }
   }
 
   calculateStrength(password: string) {
-    if (!password) {
-      this.passwordStrength = 0;
-      return;
-    }
+    if (!password) { this.passwordStrength = 0; return; }
     let score = 0;
     if (password.length >= 6) score++;
     if (password.length >= 8 && /[0-9]/.test(password)) score++;
     if (password.length >= 10 && /[A-Z]/.test(password) && /[^A-Za-z0-9]/.test(password)) score++;
-    
     this.passwordStrength = score;
   }
 
-  togglePassword() {
-    this.showPassword = !this.showPassword;
-  }
-
-  toggleConfirmPassword() {
-    this.showConfirmPassword = !this.showConfirmPassword;
-  }
+  togglePassword() { this.showPassword = !this.showPassword; }
+  toggleConfirmPassword() { this.showConfirmPassword = !this.showConfirmPassword; }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+        this.form.markAllAsTouched();
+        return;
+    }
 
     const { password, confirmPassword } = this.form.value;
     if (password !== confirmPassword) {
-      alert('As senhas não conferem');
+      this.submissionError = 'As senhas não conferem.';
       return;
     }
 
     this.isLoading = true;
+    this.submissionError = '';
     
+    // Envia apenas números ou vazio
     const rawPhone = this.form.value.phone ? this.form.value.phone.replace(/\D/g, '') : '';
 
     const payload = {
@@ -137,7 +135,8 @@ export class SetupAccountComponent implements OnInit {
       },
       error: (err: any) => {
         this.isLoading = false;
-        alert(err.error?.message || 'Erro ao criar conta.');
+        const msg = err.error?.message || err.error || 'Erro desconhecido';
+        this.submissionError = typeof msg === 'string' ? msg : 'Erro ao criar conta. Tente novamente.';
       }
     });
   }
