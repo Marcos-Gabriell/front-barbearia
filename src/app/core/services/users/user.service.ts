@@ -35,7 +35,6 @@ export class UserService {
 
   constructor(private http: HttpClient) {}
 
-  // ---------- PUBLIC ----------
   validateInviteToken(token: string): Observable<InviteTokenValidationResponse> {
     return this.http.get<InviteTokenValidationResponse>(`${this.BASE_URL}/public/invite/${token}`);
   }
@@ -46,7 +45,6 @@ export class UserService {
       .pipe(map(r => r.data));
   }
 
-  // ---------- USERS (ADMIN/DEV) ----------
   invite(data: InviteRequest): Observable<void> {
     return this.http
       .post<ApiResponse<void>>(`${this.BASE_URL}/users/invite`, data)
@@ -98,13 +96,10 @@ export class UserService {
       .pipe(map(r => r.data));
   }
 
-  // ✅ CORREÇÃO AQUI: Aponta para o endpoint que traz TODOS os usuários
   listStaffForCatalog(): Observable<ApiResponse<UserSummary[]>> {
-    // Mudamos de '/users/catalog-eligible' para '/admin/services/all-users'
     return this.http.get<ApiResponse<UserSummary[]>>(`${this.BASE_URL}/admin/services/all-users`);
   }
 
-  // ---------- PROFILE ----------
   getProfile(): Observable<User> {
     return this.http
       .get<ApiResponse<User>>(`${this.BASE_URL}/users/me`)

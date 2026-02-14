@@ -24,7 +24,7 @@ export class LoginComponent implements OnInit {
 
   isLoading = false;
   showPassword = false;
-  showContactModal = false; // Controle do Modal
+  showContactModal = false;
   returnUrl: string = '/dashboard';
 
   form = this.fb.group({

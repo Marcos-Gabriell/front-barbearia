@@ -56,7 +56,6 @@ export class ProfileComponent implements OnInit {
 
   activeModal = signal<ModalType>(null);
 
-  // modal de sucesso (você já tinha)
   showSuccessModal = signal(false);
   successTitle = signal('');
   successMessage = signal('');
@@ -74,19 +73,14 @@ export class ProfileComponent implements OnInit {
   passwordForm!: FormGroup;
   phoneForm!: FormGroup;
 
-  // =========================
-  // AGENDA / DISPONIBILIDADE
-  // =========================
   isScheduleLoading = signal(false);
   isScheduleSaving = signal(false);
 
   schedule = signal<ScheduleRequestDTO>({ days: [] });
   originalSchedule = signal<ScheduleRequestDTO>({ days: [] });
 
-  // controla qual dia está expandido (COMEÇA NULO => todos fechados)
   expandedDay = signal<DayOfWeek | null>(null);
 
-  // ✅ FILTRO DE DISPONIBILIDADE
   scheduleFilter = signal<'all' | 'active' | 'inactive'>('all');
 
   scheduleDaysFiltered = computed(() => {
@@ -98,7 +92,6 @@ export class ProfileComponent implements OnInit {
     return days;
   });
 
-  // labels PT-BR
   readonly dayLabel: Record<DayOfWeek, string> = {
     SUNDAY: 'Domingo',
     MONDAY: 'Segunda',
@@ -109,7 +102,6 @@ export class ProfileComponent implements OnInit {
     SATURDAY: 'Sábado'
   };
 
-  // ordem fixa (Seg -> Dom) para bater com UX
   readonly weekOrder: DayOfWeek[] = [
     'SUNDAY',
     'MONDAY',
@@ -375,13 +367,9 @@ export class ProfileComponent implements OnInit {
     this.isSaving.set(false);
   }
 
-  // =========================
-  // AGENDA - FUNÇÕES
-  // =========================
-
   private openScheduleModal() {
-    this.expandedDay.set(null); // ✅ todos fechados
-    this.scheduleFilter.set('all'); // ✅ reset filtro
+    this.expandedDay.set(null);
+    this.scheduleFilter.set('all');
     this.isScheduleLoading.set(true);
     this.activeModal.set('SCHEDULE');
 
@@ -406,16 +394,13 @@ export class ProfileComponent implements OnInit {
   }
 
   toggleExpand(day: DayConfigDTO) {
-    // ✅ se inativo, não abre
     if (!day.active) return;
 
-    // ✅ se clicar no mesmo, fecha
     if (this.expandedDay() === day.dayOfWeek) {
       this.expandedDay.set(null);
       return;
     }
 
-    // ✅ abre um e fecha o outro
     this.expandedDay.set(day.dayOfWeek);
   }
 
@@ -423,7 +408,6 @@ export class ProfileComponent implements OnInit {
     day.active = checked;
 
     if (!checked) {
-      // desativou => limpa horários + pausas + fecha expansão
       day.startTime = null;
       day.endTime = null;
       day.breaks = [];
@@ -431,7 +415,6 @@ export class ProfileComponent implements OnInit {
       return;
     }
 
-    // ativou => define padrão se vazio
     if (!day.startTime) day.startTime = '09:00';
     if (!day.endTime) day.endTime = '18:00';
   }
@@ -456,13 +439,11 @@ export class ProfileComponent implements OnInit {
   }
 
   saveSchedule() {
-    // ✅ validar se mudou
     if (!this.hasScheduleChanged()) {
       this.toastService.info('Nenhuma alteração detectada na agenda.');
       return;
     }
 
-    // ✅ validar regras do front antes de bater no back
     const err = this.validateScheduleFront();
     if (err) {
       this.toastService.warning(err);
@@ -487,7 +468,6 @@ export class ProfileComponent implements OnInit {
     this.availabilityService.updateMySchedule(payload).subscribe({
       next: () => {
         this.isScheduleSaving.set(false);
-        // atualiza "original" para evitar falso "mudou"
         const normalized = this.normalizeSchedule(payload);
         this.schedule.set(this.deepClone(normalized));
         this.originalSchedule.set(this.deepClone(normalized));
@@ -503,13 +483,11 @@ export class ProfileComponent implements OnInit {
   private validateScheduleFront(): string | null {
     const days = this.schedule().days || [];
 
-    // o back exige 7 dias
     if (days.length !== 7) return 'Agenda inválida: deve conter os 7 dias da semana.';
 
     for (const day of days) {
       if (!day.dayOfWeek) return 'Dia da semana inválido.';
       if (!day.active) {
-        // inativo => sem pausas (regra)
         if (day.breaks?.length) return `${this.dayLabel[day.dayOfWeek]} está inativo e não pode ter pausas.`;
         continue;
       }
@@ -523,7 +501,6 @@ export class ProfileComponent implements OnInit {
       const breaks = (day.breaks || []).slice();
       if (breaks.length > 3) return `${this.dayLabel[day.dayOfWeek]}: máximo 3 pausas.`;
 
-      // valida pausas
       const sorted = breaks
         .map((b: IntervalDTO) => ({ ...b }))
         .sort((a: IntervalDTO, b: IntervalDTO) => this.timeToMin(a.start) - this.timeToMin(b.start));
@@ -540,9 +517,7 @@ export class ProfileComponent implements OnInit {
         if (bs < ws || be > we) return `${this.dayLabel[day.dayOfWeek]}: pausa deve ficar dentro do expediente.`;
 
         if (lastEnd !== null) {
-          // ✅ não pode sobrepor
           if (bs < lastEnd) return `${this.dayLabel[day.dayOfWeek]}: pausas não podem se sobrepor.`;
-          // ✅ não pode ficar colado
           if (bs === lastEnd) return `${this.dayLabel[day.dayOfWeek]}: pausas não podem ficar coladas.`;
         }
 
@@ -571,8 +546,6 @@ export class ProfileComponent implements OnInit {
       }))
     }));
 
-    // garante 7 dias (se o backend vier vazio, você pode optar por criar no front)
-    // aqui só mantém como veio. (se vier vazio, a UI mostra loading/estado vazio)
     return { days };
   }
 
@@ -581,16 +554,14 @@ export class ProfileComponent implements OnInit {
   }
 
   private toHHmm(value: string): string {
-    // "09:00:00" -> "09:00"
     if (!value) return value;
     return value.length >= 5 ? value.slice(0, 5) : value;
   }
 
   private toHHmmss(value: string | null): string | null {
     if (!value) return null;
-    // input time normalmente é "HH:mm"
     if (value.length === 5) return `${value}:00`;
-    return value; // já deve estar HH:mm:ss
+    return value;
   }
 
   private timeToMin(value: string): number {

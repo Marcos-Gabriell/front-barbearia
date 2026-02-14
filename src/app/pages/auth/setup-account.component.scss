@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-// --- VARIÁVEIS ---
 :root {
   --font-main: 'Inter', sans-serif;
   --bg-body: #f1f5f9;
@@ -8,9 +7,9 @@
   --text-main: #1e293b;
   --text-muted: #64748b;
   --border-color: #e2e8f0;
-  --primary: #10b981;       // Verde Principal
+  --primary: #10b981;
   --primary-hover: #059669;
-  --danger: #ef4444;        // Vermelho Erro
+  --danger: #ef4444;
   
   &.dark-theme {
     --bg-body: #09090b;
@@ -24,14 +23,12 @@
 
 * { box-sizing: border-box; }
 
-// --- LAYOUT ---
 .setup-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   
-  // Garante tela cheia em mobile sem cortar botões
   min-height: 100vh;
   min-height: 100svh; 
   
@@ -59,7 +56,6 @@
   }
 }
 
-// --- TEXTOS E CABEÇALHO ---
 .header {
   text-align: center;
   margin-bottom: 32px;
@@ -74,11 +70,10 @@
   label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
 }
 
-// --- INPUTS ---
 .modern-input {
   width: 100%;
   padding: 12px 16px;
-  padding-right: 45px; // Espaço para o ícone não cobrir texto
+  padding-right: 45px;
   
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -88,7 +83,6 @@
   outline: none;
   transition: all 0.2s ease;
   
-  // Evita zoom automático no iOS
   @media (max-width: 768px) { font-size: 16px; }
 
   &::placeholder { color: var(--text-muted); opacity: 0.7; }
@@ -101,7 +95,6 @@
   }
 }
 
-// --- CORREÇÃO DO OLHO DUPLO ---
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear { display: none !important; }
 
@@ -114,7 +107,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   right: 0;
 }
 
-// --- ERROS E MENSAGENS ---
 .field-error {
   color: var(--danger);
   font-size: 12px;
@@ -140,7 +132,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   span { color: var(--danger); font-size: 13px; font-weight: 600; }
 }
 
-// --- PASSWORD WRAPPER ---
 .password-wrapper {
   position: relative;
   .eye-btn {
@@ -177,7 +168,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   .strength-text { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
 }
 
-// --- BOTÕES ---
 .btn-primary {
   width: 100%;
   background-color: var(--primary);
@@ -208,7 +198,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   &:hover { background: rgba(0,0,0,0.05); border-color: var(--text-muted); }
 }
 
-// --- LOADING E VIEW DE SUCESSO ---
 .state-box {
   text-align: center; padding: 40px 20px;
   .spinner {
@@ -227,7 +216,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 
 .footer-copy { margin-top: 32px; color: var(--text-muted); font-size: 12px; opacity: 0.8; }
 
-// --- ANIMAÇÕES GERAIS ---
 @keyframes spin { 100% { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -235,7 +223,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .fade-in { animation: fadeIn 0.6s ease-out; }
 .fade-in-up { animation: fadeInUp 0.6s ease-out; }
 
-// --- NOVA ANIMAÇÃO DE SUCESSO (SVG) ---
 .animation-container {
   display: flex; justify-content: center; margin-bottom: 20px;
 }

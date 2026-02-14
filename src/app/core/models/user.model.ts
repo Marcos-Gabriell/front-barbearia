@@ -4,7 +4,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  phone?: string; // Optional because it might be null from backend
+  phone?: string;
   role: string;
   active: boolean;
   pendingEmail?: string | null;
@@ -17,7 +17,7 @@ export interface User {
 export interface UserRequest {
   name: string;
   email: string;
-  phone?: string; // Optional for request
+  phone?: string;
   role: string;
   password?: string;
 }

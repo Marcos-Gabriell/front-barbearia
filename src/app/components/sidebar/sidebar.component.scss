@@ -1,6 +1,6 @@
 @use 'sass:color';
 
-$primary: #10b981; // Verde da Marca
+$primary: #10b981;
 $danger: #ef4444; 
 $danger-soft: #fca5a5;
 
@@ -23,7 +23,6 @@ $anim-speed: 0.4s;
   box-shadow: 4px 0 15px rgba(0,0,0,0.05);
   user-select: none;
 
-  // --- ESTADO RECOLHIDO ---
   &.collapsed {
     width: $w-collapsed;
 
@@ -44,7 +43,6 @@ $anim-speed: 0.4s;
       
       .theme-toggle, .user-widget {
         justify-content: center;
-        // Oculta detalhes no modo recolhido
         .label, .user-details, .logout-icon-btn, .version { display: none; }
       }
       
@@ -52,7 +50,6 @@ $anim-speed: 0.4s;
     }
   }
 
-  // --- RESPONSIVIDADE MOBILE ---
   @media (max-width: 768px) {
     position: fixed;
     top: 0;
@@ -73,7 +70,6 @@ $anim-speed: 0.4s;
   }
 }
 
-// --- HEADER ---
 .sidebar-header {
   height: 160px; 
   display: flex;
@@ -130,7 +126,6 @@ $anim-speed: 0.4s;
   }
 }
 
-// --- NAV LINKS ---
 .nav-links {
   list-style: none;
   padding: 0 16px;
@@ -185,7 +180,6 @@ $anim-speed: 0.4s;
   }
 }
 
-// --- FOOTER ---
 .sidebar-footer {
   padding: 20px 16px;
   border-top: 1px solid var(--border-color);
@@ -194,17 +188,16 @@ $anim-speed: 0.4s;
   flex-direction: column;
   gap: 12px;
 
-  // Botão de Tema (SÓ ÍCONE, CENTRALIZADO)
   .theme-toggle {
     display: flex;
     align-items: center;
-    justify-content: center; // Centraliza
+    justify-content: center;
     
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-muted);
     
-    padding: 10px; // Padding uniforme para quadrado/bola
+    padding: 10px;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
@@ -213,7 +206,6 @@ $anim-speed: 0.4s;
 
     .icon-box { display: flex; align-items: center; justify-content: center; }
     
-    // Esconde o texto
     .label { display: none; }
 
     &:hover {
@@ -223,7 +215,6 @@ $anim-speed: 0.4s;
     }
   }
 
-  // Widget do Usuário (COM DESTAQUE)
   .user-widget {
     display: flex;
     align-items: center;
@@ -237,7 +228,6 @@ $anim-speed: 0.4s;
     transition: all 0.2s ease;
 
     &:hover {
-      // Destaque colorido na borda
       border-color: $primary;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       .user-details .user-name { color: $primary; }
@@ -307,14 +297,13 @@ $anim-speed: 0.4s;
   }
 }
 
-// --- MODAL ---
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6); // Fundo escuro fixo
+  background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
@@ -323,7 +312,7 @@ $anim-speed: 0.4s;
   animation: fadeIn 0.2s ease;
 
   .modal-box {
-    background: var(--bg-card); // Adaptável
+    background: var(--bg-card);
     padding: 24px;
     border-radius: 16px;
     width: 90%;

@@ -33,6 +33,15 @@ export interface ValidateCodePayload {
   code: string;
 }
 
+export interface UserData {
+  userId: number;
+  email: string;
+  role: string;
+  authorities: string[];
+  exp: number;
+  iat: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
@@ -144,5 +153,53 @@ export class AuthService {
     } catch (e) {
       return null;
     }
+  }
+
+  getUserRole(): string {
+    const userData = this.getCurrentUserData();
+    return userData?.role || '';
+  }
+
+  getUserId(): number | null {
+    const userData = this.getCurrentUserData();
+    return userData?.userId || null;
+  }
+
+  getCurrentUserData(): UserData | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+
+    try {
+      const payload = this.decodeToken(token);
+      if (!payload) return null;
+
+      let role = '';
+      if (payload.authorities && Array.isArray(payload.authorities)) {
+        const authority = payload.authorities[0];
+        role = authority.replace('ROLE_', '');
+      }
+
+      return {
+        userId: payload.userId || payload.sub || payload.id,
+        email: payload.email || payload.sub,
+        role: role,
+        authorities: payload.authorities || [],
+        exp: payload.exp,
+        iat: payload.iat
+      };
+    } catch (error) {
+      console.error('Erro ao decodificar token:', error);
+      return null;
+    }
+  }
+
+  hasRole(role: string): boolean {
+    const userRole = this.getUserRole();
+    return userRole === role;
+  }
+
+  hasAnyRole(roles: string[]): boolean {
+    const userRole = this.getUserRole();
+    return roles.includes(userRole);
   }
 }

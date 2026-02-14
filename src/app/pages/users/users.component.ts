@@ -15,7 +15,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   users: User[] = [];
   isLoading = false;
   currentUserId: number | null = null;
-  currentUserRole: string | null = null; // Armazena a role do usuário logado
+  currentUserRole: string | null = null;
 
   currentPage = 1;
   itemsPerPage = 10;
@@ -48,7 +48,6 @@ export class UsersComponent implements OnInit, OnDestroy {
   form: FormGroup;
   submitted = false; 
   
-  // Lista de roles que será filtrada dinamicamente
   availableRoles: UserRole[] = [];
   
   emailDomains = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com.br', 'live.com', 'icloud.com'];
@@ -66,14 +65,10 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Carrega o perfil PRIMEIRO para saber quem é o usuário logado
     this.userService.getProfile().subscribe({
       next: (user) => { 
         this.currentUserId = user.id; 
         this.currentUserRole = user.role; 
-        
-        // SÓ carrega a lista depois de saber a role do usuário logado
-        // para aplicar o filtro corretamente
         this.loadUsers();
       },
       error: (err) => console.error('Erro ao carregar perfil:', err)
@@ -112,7 +107,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.emailSuggestions = [];
   }
 
-  // Lógica de permissão de criação (Mantida conforme pedido anterior)
   updateAvailableRoles() {
     if (this.currentUserRole === 'DEV') {
       this.availableRoles = ['STAFF', 'ADMIN', 'DEV'];
@@ -257,12 +251,9 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.userService.list().subscribe({
       next: (data) => { 
-        // LÓGICA DE FILTRAGEM ALTERADA AQUI
         if (this.currentUserRole === 'DEV') {
-            // Se sou DEV, vejo todo mundo (incluindo outros DEVs)
             this.users = data;
         } else {
-            // Se sou ADMIN ou STAFF, filtro para NÃO ver DEVs
             this.users = data.filter(u => u.role !== 'DEV'); 
         }
         this.isLoading = false; 

@@ -84,7 +84,6 @@
         </button>
       </div>
 
-      <!-- ✅ DISPONIBILIDADE -->
       <div class="field-row">
         <div class="field-icon-wrapper teal">
           <lucide-icon [name]="icons.CalendarDays" class="w-5 h-5"></lucide-icon>
@@ -101,11 +100,6 @@
     </div>
   </div>
 
-  <!-- =======================
-       MODAIS EXISTENTES (NAME, EMAIL, PHONE, PASSWORD)
-  ======================== -->
-
-  <!-- MODAL NAME -->
   <div class="modal-overlay" *ngIf="activeModal() === 'NAME'">
     <div class="modal-card fade-in-up">
       <div class="modal-header">
@@ -135,7 +129,6 @@
     </div>
   </div>
 
-  <!-- MODAL EMAIL -->
   <div class="modal-overlay" *ngIf="activeModal() === 'EMAIL'">
     <div class="modal-card fade-in-up">
       <div class="modal-header">
@@ -177,7 +170,6 @@
     </div>
   </div>
 
-  <!-- MODAL PHONE -->
   <div class="modal-overlay" *ngIf="activeModal() === 'PHONE'">
     <div class="modal-card fade-in-up">
       <div class="modal-header">
@@ -209,7 +201,6 @@
     </div>
   </div>
 
-  <!-- MODAL PASSWORD -->
   <div class="modal-overlay" *ngIf="activeModal() === 'PASSWORD'">
     <div class="modal-card fade-in-up">
       <div class="modal-header">
@@ -274,9 +265,6 @@
     </div>
   </div>
 
-  <!-- =======================
-       ✅ MODAL AGENDA COM FILTROS E ANIMAÇÕES
-  ======================== -->
   <div class="modal-overlay modal-schedule-overlay" *ngIf="activeModal() === 'SCHEDULE'">
     <div class="modal-card modal-schedule scale-in">
 
@@ -291,7 +279,6 @@
         </button>
       </div>
 
-      <!-- LOADING -->
       <div class="modal-body schedule-body" *ngIf="isScheduleLoading()">
         <div class="schedule-loading pulse-in">
           <div class="spinner"></div>
@@ -299,10 +286,8 @@
         </div>
       </div>
 
-      <!-- CONTENT -->
       <div class="modal-body schedule-body" *ngIf="!isScheduleLoading()">
 
-        <!-- ✅ FILTROS -->
         <div class="filter-tabs slide-down">
           <button 
             class="filter-btn" 
@@ -384,7 +369,6 @@
               </div>
             </div>
 
-            <!-- ✅ EXPAND com animação -->
             <div class="breaks-panel expand-collapse" 
                  *ngIf="expandedDay() === day.dayOfWeek"
                  [@expandCollapse]>
@@ -430,7 +414,6 @@
     </div>
   </div>
 
-  <!-- ✅ MODAL DE SUCESSO -->
   <div class="modal-overlay" *ngIf="showSuccessModal()">
     <div class="modal-card fade-in-up" style="max-width: 340px;">
       <div class="modal-body text-center" style="padding: 30px 24px; text-align: center;">

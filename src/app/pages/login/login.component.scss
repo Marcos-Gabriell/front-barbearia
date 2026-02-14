@@ -8,11 +8,10 @@
   max-width: 100%;
 }
 
-/* Anti-vazamento + consistência */
 :host,
 .split-layout,
 .form-section {
-  overflow-x: clip; /* se não suportar, não quebra */
+  overflow-x: clip;
 }
 
 *,
@@ -24,7 +23,7 @@
 svg {
   max-width: 100%;
   height: auto;
-  display: block; /* evita “sobrinha” inline */
+  display: block;
 }
 
 $primary: #0f172a;
@@ -34,17 +33,15 @@ $text-dark: #1e293b;
 $text-gray: #64748b;
 $bg-input: #f8fafc;
 
-// --- ESTRUTURA ---
 .split-layout {
   display: flex;
-  min-height: 100svh; /* troca 100vh por 100svh */
+  min-height: 100svh;
   width: 100%;
   max-width: 100%;
   background: white;
   font-family: 'Inter', sans-serif;
 }
 
-// --- DESKTOP (ESQUERDA) ---
 .brand-section {
   flex: 1;
   width: 50%;
@@ -101,7 +98,6 @@ $bg-input: #f8fafc;
   }
 }
 
-// --- FORMULÁRIO (DIREITA / MOBILE) ---
 .form-section {
   flex: 1;
   width: 50%;
@@ -118,7 +114,6 @@ $bg-input: #f8fafc;
   max-width: 380px;
 }
 
-/* --- HEADER MOBILE --- */
 .header-mobile {
   display: none;
   justify-content: center;
@@ -154,7 +149,6 @@ $bg-input: #f8fafc;
   }
 }
 
-// --- INPUTS ---
 .field {
   margin-bottom: 20px;
 
@@ -175,7 +169,7 @@ $bg-input: #f8fafc;
       width: 100%;
       max-width: 100%;
       padding: 14px 44px;
-      font-size: 16px; /* evita zoom iOS */
+      font-size: 16px;
       color: $text-dark;
       background: $bg-input;
       border: 1px solid #e2e8f0;
@@ -224,7 +218,6 @@ $bg-input: #f8fafc;
   }
 }
 
-// --- AÇÕES ---
 .actions-row {
   display: flex;
   justify-content: space-between;
@@ -291,7 +284,6 @@ $bg-input: #f8fafc;
   }
 }
 
-// --- MODAL ---
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -332,13 +324,9 @@ $bg-input: #f8fafc;
   }
 }
 
-// --- ANIMAÇÕES ---
 .fade-in { animation: fadeIn 0.8s ease-out; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* =========================
-   MOBILE (APP) – <= 900px
-   ========================= */
 @media (max-width: 900px) {
 
   .split-layout {
@@ -346,7 +334,7 @@ $bg-input: #f8fafc;
     min-height: 100svh;
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden; /* fallback do clip */
+    overflow-x: hidden;
     background: #f1f5f9;
   }
 
@@ -441,7 +429,6 @@ $bg-input: #f8fafc;
   }
 }
 
-/* Extra: celulares bem pequenos */
 @media (max-width: 380px) {
   .form-container { padding: 14px; }
   .header-text h1 { font-size: 24px; }

@@ -10,7 +10,7 @@ export interface CatalogItem {
   updatedAt?: string;
   createdByUserId?: number;
   createdByUserName?: string;
-  responsibleUsers?: UserSummary[]; // opcional
+  responsibleUsers?: UserSummary[];
 }
 
 export interface UserSummary {
@@ -32,7 +32,6 @@ export interface CreateCatalogRequest {
   price: number;
   active?: boolean;
 
-  // OBRIGATÓRIO no backend
   responsibleUserIds: number[];
 }
 
@@ -43,7 +42,6 @@ export interface UpdateCatalogRequest {
   price: number;
   active: boolean;
 
-  // OBRIGATÓRIO no backend
   responsibleUserIds: number[];
 }
 

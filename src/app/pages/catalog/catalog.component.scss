@@ -13,7 +13,6 @@ $border-color: var(--border-color, #e2e8f0);
 $bg-card: var(--bg-card, #ffffff);
 $bg-body: var(--bg-body, #f8fafc);
 
-// --- ESTILOS DO MODAL ---
 .modal-overlay { 
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); padding: 16px; 
   @media (max-width: 600px) { padding: 0; align-items: flex-end; }
@@ -28,47 +27,43 @@ $bg-body: var(--bg-body, #f8fafc);
   .modal-footer { padding: 16px 24px; background: rgba(0,0,0,0.02); display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid $border-color; } 
 }
 
-// --- CUSTOM INPUT DE NÚMERO (DURAÇÃO) ---
 .custom-number-input {
-  display: flex; align-items: center; justify-content: space-between; // Garante distribuição
+  display: flex; align-items: center; justify-content: space-between;
   border: 1px solid $border-color; border-radius: 12px; background: $bg-card; overflow: hidden; transition: all 0.2s; height: 46px; 
   &.error-border { border-color: $danger; background: rgba(239, 68, 68, 0.02); }
   
   .btn-step {
-    background: transparent; border: none; width: 40px; // Largura fixa segura
+    background: transparent; border: none; width: 40px;
     height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: $text-muted; transition: background 0.2s; 
-    flex-shrink: 0; // <--- OBRIGA O BOTÃO A NÃO ENCOLHER
+    flex-shrink: 0;
     &:hover { background: rgba(0,0,0,0.05); color: $primary; } &:active { background: rgba(0,0,0,0.1); }
   }
   
   .input-no-spinner {
     flex: 1; 
-    min-width: 0; // Permite que o input encolha se necessário, mas os botões ficam
+    min-width: 0;
     text-align: center; border: none; background: transparent; font-size: 14px; font-weight: 600; color: $text-main; outline: none; padding: 0; appearance: textfield;
     &::-webkit-outer-spin-button, &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   }
   
   .unit { 
     font-size: 12px; color: $text-muted; margin-right: 8px; font-weight: 500; 
-    flex-shrink: 0; // <--- OBRIGA A UNIDADE A NÃO SUMIR
+    flex-shrink: 0;
   }
 }
 
-// --- INPUTS GERAIS ---
 .modern-input, .modern-textarea { 
   width: 100%; padding: 12px 16px; border: 1px solid $border-color; border-radius: 12px; font-size: 14px; color: $text-main; outline: none; background: $bg-card; transition: all 0.2s; box-sizing: border-box; 
   &:focus { border-color: $accent; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); } 
   &.error-border { border-color: $danger; box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2); }
 }
 
-// --- ALERT ERROR BOX ---
 .alert-error-box {
   background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; gap: 12px; align-items: flex-start; animation: fadeIn 0.3s ease;
   .icon-wrapper { color: $danger; display: flex; align-items: center; margin-top: 2px; }
   .error-content { display: flex; flex-direction: column; gap: 2px; strong { color: $danger; font-size: 13px; font-weight: 700; } span { color: $text-main; font-size: 13px; line-height: 1.4; } }
 }
 
-// --- SELETOR DE USUÁRIOS ---
 .responsibles-selector {
   border: 1px solid $border-color; border-radius: 12px; padding: 12px; background: rgba(0,0,0,0.01); transition: all 0.2s;
   &.error-border { border-color: $danger; background: rgba(239, 68, 68, 0.02); }
@@ -79,11 +74,9 @@ $bg-body: var(--bg-body, #f8fafc);
   .selected-list-preview { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
 }
 
-// --- SUCCESS MODAL STYLES ---
 .success-title { color: $text-main; margin: 0; }
 .success-message { color: $text-muted; margin: 0; }
 
-// --- RESTANTE DOS ESTILOS ---
 .details-content { display: flex; flex-direction: column; gap: 20px; .details-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid $border-color; padding-bottom: 16px; h3 { margin: 0; font-size: 20px; color: $text-main; } } .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; .detail-box { background: $bg-body; border-radius: 12px; padding: 12px; border: 1px solid $border-color; display: flex; flex-direction: column; gap: 4px; .value { font-size: 16px; font-weight: 700; color: $text-main; } .value.price { color: $primary; font-size: 18px; } } } .detail-section { display: flex; flex-direction: column; gap: 8px; .text-block { background: $bg-body; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.5; color: $text-main; margin: 0; border: 1px solid $border-color; } } .users-grid { display: flex; flex-wrap: wrap; gap: 8px; .user-chip { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; background: rgba($accent, 0.08); border: 1px solid rgba($accent, 0.2); color: $text-main; font-weight: 600; font-size: 13px; .avatar-mini { width: 24px; height: 24px; background: $accent; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; } } } .detail-meta { border-top: 1px dashed $border-color; padding-top: 12px; font-size: 12px; color: $text-muted; text-align: right; } .label { font-size: 12px; font-weight: 700; color: $text-muted; text-transform: uppercase; letter-spacing: 0.5px; } }
 .spaced-top { margin-top: 12px; }
 .hint.error-msg { color: $danger; display: flex; align-items: center; gap: 6px; font-weight: 600; margin-top: 10px; }

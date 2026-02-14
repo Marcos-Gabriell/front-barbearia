@@ -117,7 +117,6 @@ export class SetupAccountComponent implements OnInit {
     this.isLoading = true;
     this.submissionError = '';
     
-    // Envia apenas números ou vazio
     const rawPhone = this.form.value.phone ? this.form.value.phone.replace(/\D/g, '') : '';
 
     const payload = {

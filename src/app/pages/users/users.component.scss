@@ -89,7 +89,6 @@ $bg-body: var(--bg-body);
   .desktop-only { display: none; } 
   
 .page-container {
-    /* 0 no topo, 32px na direita, 0 embaixo, 10px na esquerda */
     padding: 0 32px 0 10px; 
   }
   
@@ -150,7 +149,6 @@ $bg-body: var(--bg-body);
     svg { width: 20px; height: 20px; }
   }
   
-  /* Botão + vira só ícone */
   .page-header .btn-primary {
     padding: 8px;
     min-width: auto;
@@ -169,7 +167,6 @@ $bg-body: var(--bg-body);
   }
 }
 
-/* --- ANIMAÇÕES E EXTRAS --- */
 .fade-in { animation: fadeIn 0.4s ease-out; } .fade-in-up { animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } } @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: 0; } }
 .spinner { width: 18px; height: 18px; border: 2px solid #ffffff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } } .empty-state { text-align: center; padding: 40px; color: $text-muted; }
 

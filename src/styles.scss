@@ -1,32 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-// --- THEME VARIABLES ---
 :root {
-  /* --- LIGHT THEME (DEFAULT) --- */
   --font-main: 'Inter', sans-serif;
   
-  --bg-body: #f1f5f9;           // Page background (very light gray)
-  --bg-card: #ffffff;           // Card background (white)
-  --bg-sidebar: #ffffff;        // Sidebar background
+  --bg-body: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-sidebar: #ffffff;
   
-  --text-main: #1e293b;         // Main text (almost black)
-  --text-muted: #64748b;        // Secondary text
+  --text-main: #1e293b;
+  --text-muted: #64748b;
   
-  --border-color: #e2e8f0;      // Borders
+  --border-color: #e2e8f0;
   
-  --primary: #10b981;           // Green (Barbershop)
+  --primary: #10b981;
   --primary-hover: #059669;
 }
 
-// --- DARK THEME ---
 .dark-theme {
-  /* Page background: Soft black */
   --bg-body: #09090b; 
-  
-  /* Cards/Widgets: Dark gray (for contrast) */
   --bg-card: #18181b;
-
-  /* Sidebar: Same as body for this theme style */
   --bg-sidebar: #09090b;
   
   --text-main: #f4f4f5;
@@ -38,17 +30,15 @@
   --primary-hover: #10b981;
 }
 
-// --- GLOBAL RESETS ---
 body {
   margin: 0;
   font-family: var(--font-main);
   background-color: var(--bg-body);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.3s ease, color 0.3s ease; // Smooth theme transition
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-// --- TOAST ANIMATIONS & STYLES ---
 @keyframes toastSlideIn {
   0% { transform: translateX(100%); opacity: 0; }
   60% { transform: translateX(-10%); opacity: 1; }
@@ -56,7 +46,6 @@ body {
   100% { transform: translateX(0); }
 }
 
-// Angular Material Snack Bar Overrides
 .mat-mdc-snack-bar-container {
   margin-top: 20px !important;
   margin-right: 20px !important;
@@ -67,7 +56,7 @@ body {
   &.toast-info .mdc-snackbar__surface { background-color: #2563eb !important; }
 
   .mdc-snackbar__surface {
-    border-radius: 8px !important; // Slightly more rounded
+    border-radius: 8px !important;
     padding: 14px 20px !important;
     min-width: 300px !important;
     box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;

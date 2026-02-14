@@ -7,8 +7,8 @@ export type DayOfWeek =
   | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 
 export interface IntervalDTO {
-  start: string; // "HH:mm"
-  end: string;   // "HH:mm"
+  start: string;
+  end: string;
 }
 
 export interface DayConfigDTO {

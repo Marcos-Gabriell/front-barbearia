@@ -301,7 +301,6 @@ $bg-body: var(--bg-body);
     overflow-y: auto;
     flex: 1;
 
-    /* Custom scrollbar */
     &::-webkit-scrollbar {
       width: 8px;
     }
@@ -492,9 +491,6 @@ $bg-body: var(--bg-body);
   &.staff { background: rgba(37, 99, 235, 0.15); color: #3b82f6; }
 }
 
-/* =========================
-   ✅ MODAL AGENDA - SCROLL ÚNICO
-========================= */
 .modal-schedule {
   max-width: 760px;
   max-height: 90vh;
@@ -536,7 +532,6 @@ $bg-body: var(--bg-body);
     }
   }
 
-  // ✅ ÚNICA ÁREA DE SCROLL = modal-body
   .modal-body {
     padding: 18px;
 
@@ -647,7 +642,6 @@ $bg-body: var(--bg-body);
   }
 }
 
-// ✅ REMOVIDO schedule-scroll - scroll é no modal-body
 .schedule-list {
   display: flex;
   flex-direction: column;

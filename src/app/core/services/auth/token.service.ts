@@ -14,7 +14,7 @@ type JwtPayload = {
 export class TokenService {
   private readonly ACCESS_KEY = 'barbearia_token';
   private readonly REFRESH_KEY = 'barbearia_refresh_token';
-  private readonly LEGACY_KEY = 'token'; // legado (se você usava antes)
+  private readonly LEGACY_KEY = 'token';
 
   private platformId = inject(PLATFORM_ID);
 

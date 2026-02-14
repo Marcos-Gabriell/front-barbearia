@@ -43,6 +43,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/users/users.component').then(m => m.UsersComponent),
   },
+
+  {
+    path: 'availability',
+    canActivate: [authGuard, roleGuard(['DEV', 'ADMIN'])],
+    loadComponent: () =>
+      import('./pages/availability/availability.component').then(m => m.AvailabilityComponent),
+  },
   
   {
     path: 'perfil',

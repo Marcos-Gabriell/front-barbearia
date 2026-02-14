@@ -1,0 +1,321 @@
+<div class="page-container fade-in">
+
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Gestão de Agendas</h1>
+
+      <p>
+        @if (currentUserRole() === 'DEV') {
+          Visualize e edite as agendas de todos os profissionais.
+        } @else if (currentUserRole() === 'ADMIN') {
+          Visualize e edite as agendas dos profissionais STAFF.
+        } @else {
+          Visualize as agendas disponíveis para você.
+        }
+      </p>
+
+      @if (!loading() && !error()) {
+        <div class="header-sub">
+          <span class="sub-title">Agendas disponíveis</span>
+          <span class="sub-pill">{{ professionals().length }} usuário(s)</span>
+        </div>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-state card animate-up">
+      <div class="spinner"></div>
+      <p>Carregando agendas...</p>
+    </div>
+  }
+
+  @if (!loading() && error()) {
+    <div class="empty-card card animate-up">
+      <div class="empty-icon error">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+          <path d="M12 9v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
+                stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <h3>Ops, algo deu errado</h3>
+      <p>{{ error() }}</p>
+
+      <div class="empty-actions">
+        <button class="btn-primary rounded-pill" (click)="loadProfessionals()">
+          <i class="bi bi-arrow-clockwise"></i>
+          Tentar Novamente
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (!loading() && !error() && professionals().length === 0) {
+    <div class="empty-card card animate-up">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+          <path d="M8 2v3M16 2v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M3 9h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6 5h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z"
+                stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M9 13l6 6M15 13l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <h3>Nenhuma agenda encontrada</h3>
+      <p>Não há usuários disponíveis para gerenciamento no momento.</p>
+    </div>
+  }
+
+  @if (!loading() && !error() && professionals().length > 0) {
+    <div class="cards-grid">
+      @for (p of professionalsPaginated(); track p.id) {
+        <div class="person-card stagger-in" [class.inactive]="!p.active">
+
+          <div class="person-top">
+            <div class="avatar-circle">{{ getInitials(p.name) }}</div>
+
+            <div class="person-meta">
+              <div class="name-line">
+                <strong class="text-truncate-header" [title]="p.name">{{ p.name }}</strong>
+
+                <span class="badge role" [ngClass]="p.role?.toLowerCase()">
+                  {{ getRoleLabel(p.role) }}
+                </span>
+              </div>
+
+              <div class="email-line" [title]="p.email">
+                <i class="bi bi-envelope"></i>
+                <span class="text-truncate">{{ p.email }}</span>
+              </div>
+            </div>
+
+            <span class="status-dot" [class.on]="p.active" [class.off]="!p.active"></span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="person-actions">
+            <button class="btn-primary rounded-pill"
+                    (click)="viewSchedule(p)"
+                    [disabled]="!p.active">
+              <i class="bi bi-calendar-check"></i>
+              Abrir Agenda
+            </button>
+          </div>
+
+        </div>
+      }
+    </div>
+
+    <div class="pagination" *ngIf="totalPages() > 1">
+      <button class="pagination-btn" 
+              (click)="prevPage()" 
+              [disabled]="!hasPrevPage()"
+              title="Página anterior">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <div class="pagination-numbers">
+        @for (page of getPageNumbers(); track page) {
+          @if (page === -1) {
+            <span class="pagination-dots">...</span>
+          } @else {
+            <button class="pagination-number" 
+                    [class.active]="currentPage() === page"
+                    (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          }
+        }
+      </div>
+
+      <button class="pagination-btn" 
+              (click)="nextPage()" 
+              [disabled]="!hasNextPage()"
+              title="Próxima página">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  }
+
+  <div class="modal-overlay modal-schedule-overlay" *ngIf="scheduleModalOpen()">
+    <div class="modal-card modal-schedule scale-in">
+
+      <div class="modal-header">
+        <div class="modal-title-stack">
+          <h2>Configurar Disponibilidade</h2>
+          <p>{{ selectedProfessional()?.name }}</p>
+        </div>
+
+        <button class="close-btn-circle" (click)="closeScheduleModal()">
+          <lucide-icon [name]="icons.X"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="modal-body schedule-body" *ngIf="isScheduleLoading()">
+        <div class="schedule-loading pulse-in">
+          <div class="spinner"></div>
+          <p>Carregando disponibilidade...</p>
+        </div>
+      </div>
+
+      <div class="modal-body schedule-body" *ngIf="!isScheduleLoading()">
+
+        <div class="filter-tabs slide-down">
+          <button 
+            class="filter-btn" 
+            [class.active]="scheduleFilter() === 'all'"
+            (click)="scheduleFilter.set('all')">
+            Todos
+          </button>
+          <button 
+            class="filter-btn" 
+            [class.active]="scheduleFilter() === 'active'"
+            (click)="scheduleFilter.set('active')">
+            Ativos
+          </button>
+          <button 
+            class="filter-btn" 
+            [class.active]="scheduleFilter() === 'inactive'"
+            (click)="scheduleFilter.set('inactive')">
+            Inativos
+          </button>
+        </div>
+
+        <div class="schedule-head">
+          <div class="hcol">Dia</div>
+          <div class="hcol center">Início</div>
+          <div class="hcol center">Fim</div>
+          <div class="hcol center">Ativo</div>
+          <div class="hcol right">Ações</div>
+        </div>
+
+        <div class="schedule-list">
+
+          <div class="day-card stagger-in" 
+               *ngFor="let day of scheduleDaysFiltered(); let i = index"
+               [class.expanded]="expandedDay() === day.dayOfWeek"
+               [class.inactive]="!day.active"
+               [style.animation-delay.ms]="i * 40">
+
+            <div class="day-row">
+              <button class="day-toggle"
+                      (click)="toggleExpand(day)"
+                      [disabled]="!day.active"
+                      [title]="day.active ? 'Abrir/Fechar pausas' : 'Dia inativo'">
+                <span class="day-name">{{ getDayLabel(day.dayOfWeek) }}</span>
+                <lucide-icon [name]="icons.ChevronDown" class="chev"
+                             [class.rotated]="expandedDay() === day.dayOfWeek"></lucide-icon>
+              </button>
+
+              <div class="col center">
+                <input type="time"
+                       class="modern-input time-input"
+                       [disabled]="!day.active"
+                       [(ngModel)]="day.startTime"
+                       name="start_{{day.dayOfWeek}}">
+              </div>
+
+              <div class="col center">
+                <input type="time"
+                       class="modern-input time-input"
+                       [disabled]="!day.active"
+                       [(ngModel)]="day.endTime"
+                       name="end_{{day.dayOfWeek}}">
+              </div>
+
+              <div class="col center">
+                <label class="toggle-switch">
+                  <input type="checkbox" [checked]="day.active" (change)="onToggleActive(day, $any($event.target).checked)">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <div class="col right">
+                <button class="btn-icon-add"
+                        (click)="addBreak(day)"
+                        [disabled]="!day.active || (day.breaks?.length || 0) >= 3"
+                        [title]="(day.breaks?.length || 0) >= 3 ? 'Máximo de 3 pausas' : 'Adicionar pausa'">
+                  <lucide-icon [name]="icons.Plus"></lucide-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="breaks-panel expand-collapse" 
+                 *ngIf="expandedDay() === day.dayOfWeek">
+              <div class="breaks-header">
+                <strong>Pausas / Almoço</strong>
+              </div>
+
+              <div class="breaks-list" *ngIf="(day.breaks?.length || 0) > 0; else emptyBreaks">
+                <div class="break-row fade-in-up" 
+                     *ngFor="let br of day.breaks; let idx = index"
+                     [style.animation-delay.ms]="idx * 60">
+                  <input type="time" class="modern-input time-input" [(ngModel)]="br.start" name="bstart_{{day.dayOfWeek}}_{{idx}}">
+                  <span class="sep">até</span>
+                  <input type="time" class="modern-input time-input" [(ngModel)]="br.end" name="bend_{{day.dayOfWeek}}_{{idx}}">
+
+                  <button class="btn-icon-trash" (click)="removeBreak(day, idx)" title="Remover pausa">
+                    <lucide-icon [name]="icons.Trash2"></lucide-icon>
+                  </button>
+                </div>
+              </div>
+
+              <ng-template #emptyBreaks>
+                <div class="empty-breaks fade-in">
+                  Nenhuma pausa cadastrada.
+                </div>
+              </ng-template>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer schedule-footer" *ngIf="!isScheduleLoading()">
+        <button type="button" class="btn-ghost" (click)="closeScheduleModal()">Cancelar</button>
+
+        <button type="button" class="btn-primary rounded-pill" (click)="saveSchedule()" [disabled]="isScheduleSaving()">
+          <div *ngIf="isScheduleSaving()" class="spinner-small"></div>
+          <span *ngIf="!isScheduleSaving()">Salvar Agenda</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showSuccessModal()">
+    <div class="modal-card fade-in-up" style="max-width: 340px;">
+      <div class="modal-body text-center" style="padding: 30px 24px; text-align: center;">
+
+        <div class="success-checkmark-anim">
+          <div class="check-icon">
+            <span class="icon-line line-tip"></span>
+            <span class="icon-line line-long"></span>
+            <div class="icon-circle"></div>
+            <div class="icon-fix"></div>
+          </div>
+        </div>
+
+        <h3 style="margin: 20px 0 8px 0; color: var(--text-main); font-size: 20px; font-weight: 700;">
+          {{ successTitle() }}
+        </h3>
+
+        <p style="color: var(--text-muted); font-size: 14px; margin: 0 0 24px 0; line-height: 1.5;">
+          {{ successMessage() }}
+        </p>
+
+        <button class="btn-primary rounded-pill" style="width: 100%; justify-content: center;" (click)="closeSuccessModal()">
+          OK, Entendi
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+</div>
