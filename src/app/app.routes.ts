@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { roleGuard } from './core/guards/role.guard'; 
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -19,8 +19,22 @@ export const routes: Routes = [
 
   {
     path: 'setup-conta',
-    loadComponent: () => 
+    loadComponent: () =>
       import('./pages/auth/setup-account.component').then(m => m.SetupAccountComponent),
+  },
+
+
+  {
+    path: 'cancelar-agendamento',
+    loadComponent: () =>
+      import('./pages/appointments/cancel/cancel-appointment.component').then(m => m.CancelAppointmentComponent),
+  },
+
+  {
+    path: 'agendamentos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/appointments/appointments.component').then(m => m.AppointmentsComponent),
   },
 
   {
@@ -45,12 +59,12 @@ export const routes: Routes = [
   },
 
   {
-    path: 'availability',
+    path: 'agenda',
     canActivate: [authGuard, roleGuard(['DEV', 'ADMIN'])],
     loadComponent: () =>
       import('./pages/availability/availability.component').then(m => m.AvailabilityComponent),
   },
-  
+
   {
     path: 'perfil',
     canActivate: [authGuard],

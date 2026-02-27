@@ -4,6 +4,7 @@ import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { userHeadersInterceptor } from './core/interceptors/user-headers.interceptor';
 
 import { LucideAngularModule, User, Mail, Shield, CheckCircle, AlertCircle, Loader2, Clock, Calendar, ChevronRight, Lock } from 'lucide-angular';
 
@@ -12,7 +13,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor])
+      withInterceptors([authInterceptor, userHeadersInterceptor])
     ),
     provideAnimations(),
     

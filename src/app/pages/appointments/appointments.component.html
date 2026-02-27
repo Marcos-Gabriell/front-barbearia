@@ -1,0 +1,593 @@
+<!-- src/app/pages/appointments/appointments.component.html -->
+<div class="page-container fade-in">
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Gestão de Agendamentos</h1>
+      <p>Filtre, acompanhe e gerencie os agendamentos.</p>
+    </div>
+    <button class="btn-new" (click)="openNewAppointmentModal()">
+      <lucide-icon [name]="icons.Plus" [strokeWidth]="2.5"></lucide-icon>
+      <span>Novo Agendamento</span>
+    </button>
+  </header>
+
+  <!-- FILTROS -->
+  <div class="filters-bar animate-up">
+    <div class="filter-search">
+      <lucide-icon [name]="icons.Search" [strokeWidth]="2" class="field-icon"></lucide-icon>
+      <input type="text" class="fi" placeholder="Cliente ou código..." [formControl]="form.controls.q" />
+    </div>
+
+    <select class="fi" [formControl]="form.controls.status">
+      <option value="">Todos os Status</option>
+      <option value="PENDING">Pendente</option>
+      <option value="CONFIRMED">Confirmado</option>
+      <option value="CANCELLED">Cancelado</option>
+      <option value="NO_SHOW">No-Show</option>
+    </select>
+
+    <input type="date" class="fi fi-date" [formControl]="form.controls.dateFrom" />
+    <input type="date" class="fi fi-date" [formControl]="form.controls.dateTo" />
+
+    <button class="btn-clear" *ngIf="hasActiveFilters()" (click)="clearFilters()" title="Limpar filtros">
+      <lucide-icon [name]="icons.X" [strokeWidth]="2.5"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Carregando...</p>
+  </div>
+
+  <!-- EMPTY -->
+  <div *ngIf="!loading() && items().length === 0" class="empty-state animate-up">
+    <div class="empty-icon">
+      <lucide-icon [name]="icons.CalendarX2" [strokeWidth]="1.5"></lucide-icon>
+    </div>
+    <h3>Nenhum agendamento</h3>
+    <p>Ajuste os filtros ou crie um novo.</p>
+  </div>
+
+  <!-- GRID -->
+  <div *ngIf="!loading() && items().length > 0" class="grid">
+    <div
+      class="card stagger-in"
+      *ngFor="let a of items(); let i = index"
+      [style.animation-delay.ms]="i * 40"
+      [class.status-pending]="a.status === 'PENDING'"
+      [class.status-confirmed]="a.status === 'CONFIRMED'"
+      [class.status-cancelled]="a.status === 'CANCELLED'"
+      [class.status-noshow]="a.status === 'NO_SHOW'">
+
+      <div class="card-top">
+        <span class="code-tag">{{ a.code || '#' + a.id }}</span>
+        <span class="status-tag" [ngClass]="badgeClass(a.status)">{{ getStatusLabel(a.status) }}</span>
+      </div>
+
+      <div class="card-body">
+        <h3 class="service">{{ a.serviceName }}</h3>
+        <div class="info-line">
+          <span class="ico blue"><lucide-icon [name]="icons.User" [strokeWidth]="2"></lucide-icon></span>
+          <span class="txt">{{ a.clientName }}</span>
+        </div>
+        <div class="info-line">
+          <span class="ico orange"><lucide-icon [name]="icons.CalendarDays" [strokeWidth]="2"></lucide-icon></span>
+          <span class="txt">{{ a.startAt | date:'dd/MM/yyyy' }} às {{ a.startAt | date:'HH:mm' }}</span>
+        </div>
+        <div class="info-line">
+          <span class="ico green"><lucide-icon [name]="icons.UserCheck" [strokeWidth]="2"></lucide-icon></span>
+          <span class="txt">{{ a.professionalName }}</span>
+        </div>
+      </div>
+
+      <!-- 4 botões com tooltips descritivos -->
+      <div class="card-actions">
+        <button class="action-btn view"
+                (click)="openDetails(a)"
+                title="Ver detalhes">
+          <lucide-icon [name]="icons.Eye" [strokeWidth]="2"></lucide-icon>
+        </button>
+        <button class="action-btn confirm"
+                (click)="confirmArrival(a)"
+                [disabled]="a.status !== 'PENDING' || !canConfirm(a)"
+                title="Confirmar chegada">
+          <lucide-icon [name]="icons.Check" [strokeWidth]="2.5"></lucide-icon>
+        </button>
+        <button class="action-btn cancel"
+                (click)="openCancel(a)"
+                [disabled]="a.status === 'CANCELLED' || a.status === 'CONFIRMED'"
+                title="Cancelar agendamento">
+          <lucide-icon [name]="icons.X" [strokeWidth]="2.5"></lucide-icon>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGINATION -->
+  <div *ngIf="!loading() && totalElements() > pageSize()" class="pagination">
+    <button class="pg-btn" (click)="prevPage()" [disabled]="pageIndex() === 0">
+      <lucide-icon [name]="icons.ChevronLeft" [strokeWidth]="2"></lucide-icon>
+    </button>
+    <span class="pg-info">{{ pageIndex() + 1 }} / {{ maxPageIndex() + 1 }}</span>
+    <button class="pg-btn" (click)="nextPage()" [disabled]="pageIndex() >= maxPageIndex()">
+      <lucide-icon [name]="icons.ChevronRight" [strokeWidth]="2"></lucide-icon>
+    </button>
+  </div>
+</div>
+
+<!-- ================================================
+     MODAL: DETALHES
+     ================================================ -->
+<div class="modal-overlay" *ngIf="showDetailsModal()">
+  <div class="modal-card modal-details fade-in-up">
+    <div class="modal-header">
+      <h2>Detalhes do Agendamento</h2>
+      <button class="close-btn-circle" (click)="closeDetailsModal()">
+        <lucide-icon [name]="icons.X" [strokeWidth]="2"></lucide-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="badges-row">
+        <div class="badge-box">
+          <span class="badge-label">Código</span>
+          <span class="code-tag lg">{{ selectedAppointment()?.code || '#' + selectedAppointment()?.id }}</span>
+        </div>
+        <div class="badge-box">
+          <span class="badge-label">Status</span>
+          <span class="status-tag lg" [ngClass]="badgeClass(selectedAppointment()?.status!)">
+            {{ getStatusLabel(selectedAppointment()?.status!) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="fields-list">
+        <div class="field-row">
+          <span class="field-icon purple"><lucide-icon [name]="icons.Scissors" [strokeWidth]="2"></lucide-icon></span>
+          <div class="field-info">
+            <span class="label">Serviço</span>
+            <span class="value">{{ selectedAppointment()?.serviceName }}</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-icon orange"><lucide-icon [name]="icons.Clock" [strokeWidth]="2"></lucide-icon></span>
+          <div class="field-info">
+            <span class="label">Duração</span>
+            <span class="value">{{ selectedAppointment()?.durationMinutes }} min</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-icon blue"><lucide-icon [name]="icons.User" [strokeWidth]="2"></lucide-icon></span>
+          <div class="field-info">
+            <span class="label">Cliente</span>
+            <span class="value">{{ selectedAppointment()?.clientName }}</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-icon green"><lucide-icon [name]="icons.Phone" [strokeWidth]="2"></lucide-icon></span>
+          <div class="field-info">
+            <span class="label">Telefone</span>
+            <span class="value">{{ formatPhone(selectedAppointment()?.clientPhone) }}</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-icon teal"><lucide-icon [name]="icons.CalendarDays" [strokeWidth]="2"></lucide-icon></span>
+          <div class="field-info">
+            <span class="label">Data / Horário</span>
+            <span class="value">
+              {{ selectedAppointment()?.startAt | date:'dd/MM/yyyy' }} ·
+              {{ selectedAppointment()?.startAt | date:'HH:mm' }} -
+              {{ selectedAppointment()?.endAt | date:'HH:mm' }}
+            </span>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-icon pink"><lucide-icon [name]="icons.UserCheck" [strokeWidth]="2"></lucide-icon></span>
+          <div class="field-info">
+            <span class="label">Profissional</span>
+            <span class="value">{{ selectedAppointment()?.professionalName }}</span>
+          </div>
+        </div>
+        <div class="field-row" *ngIf="selectedAppointment()?.createdAt">
+          <span class="field-icon muted"><lucide-icon [name]="icons.History" [strokeWidth]="2"></lucide-icon></span>
+          <div class="field-info">
+            <span class="label">Criado em</span>
+            <span class="value">
+              {{ selectedAppointment()?.createdAt | date:'dd/MM/yyyy' }} às {{ selectedAppointment()?.createdAt | date:'HH:mm' }}
+              <span class="origin-chip">{{ getCreatedByLabel(selectedAppointment()) }}</span>
+            </span>
+          </div>
+        </div>
+        <div class="field-row fade-in-up" *ngIf="selectedAppointment()?.status === 'CONFIRMED' && selectedAppointment()?.confirmedAt">
+          <span class="field-icon confirmed-color"><lucide-icon [name]="icons.CheckCircle" [strokeWidth]="2"></lucide-icon></span>
+          <div class="field-info">
+            <span class="label">Chegada confirmada em</span>
+            <span class="value">{{ selectedAppointment()?.confirmedAt | date:'dd/MM/yyyy' }} às {{ selectedAppointment()?.confirmedAt | date:'HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="audit-cancel-card fade-in-up" *ngIf="selectedAppointment()?.status === 'CANCELLED'">
+        <div class="audit-cancel-header">
+          <lucide-icon [name]="icons.Ban" [strokeWidth]="2"></lucide-icon>
+          <span>Informações de Cancelamento</span>
+        </div>
+        <div class="audit-cancel-rows">
+          <div class="audit-row" *ngIf="selectedAppointment()?.canceledAt">
+            <span class="a-label">Cancelado em</span>
+            <span class="a-value">
+              {{ selectedAppointment()?.canceledAt | date:'dd/MM/yyyy' }} às {{ selectedAppointment()?.canceledAt | date:'HH:mm' }}
+            </span>
+          </div>
+          <div class="audit-row">
+            <span class="a-label">Responsável</span>
+            <span class="a-value">{{ getCancelledByLabel(selectedAppointment()) }}</span>
+          </div>
+          <div class="audit-row">
+            <span class="a-label">Origem</span>
+            <span class="a-value">
+              <span class="origin-chip cancel">{{ getCancelOriginLabel(selectedAppointment()) }}</span>
+            </span>
+          </div>
+          <div class="audit-row" *ngIf="selectedAppointment()?.cancelMessage">
+            <span class="a-label">Mensagem</span>
+            <span class="a-value italic">{{ selectedAppointment()?.cancelMessage }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer between">
+      <button class="btn-ghost" (click)="closeDetailsModal()">Fechar</button>
+      <button class="btn-download"
+              (click)="downloadReceipt(selectedAppointment()!, false)"
+              [disabled]="isDownloadingPdfDetails()">
+        <div *ngIf="isDownloadingPdfDetails()" class="spinner-xs"></div>
+        <lucide-icon *ngIf="!isDownloadingPdfDetails()" [name]="icons.FileDown" [strokeWidth]="2"></lucide-icon>
+        <span>{{ isDownloadingPdfDetails() ? 'Gerando...' : 'Baixar Comprovante' }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================
+     MODAL: NOVO AGENDAMENTO (WIZARD)
+     ================================================ -->
+<div class="modal-overlay" *ngIf="showNewAppointmentModal()">
+  <div class="modal-card modal-lg scale-in">
+
+    <div class="modal-header">
+      <div class="header-info">
+        <h2>Novo Agendamento</h2>
+        <p>Etapa {{ currentStep() }} de 5</p>
+      </div>
+      <button class="close-btn-circle" (click)="closeNewAppointmentModal()">
+        <lucide-icon [name]="icons.X" [strokeWidth]="2"></lucide-icon>
+      </button>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="(currentStep() / 5) * 100"></div>
+    </div>
+
+    <div class="steps-row">
+      <span class="step-dot" [class.done]="currentStep() > 1" [class.active]="currentStep() === 1">1</span>
+      <span class="step-line" [class.done]="currentStep() > 1"></span>
+      <span class="step-dot" [class.done]="currentStep() > 2" [class.active]="currentStep() === 2">2</span>
+      <span class="step-line" [class.done]="currentStep() > 2"></span>
+      <span class="step-dot" [class.done]="currentStep() > 3" [class.active]="currentStep() === 3">3</span>
+      <span class="step-line" [class.done]="currentStep() > 3"></span>
+      <span class="step-dot" [class.done]="currentStep() > 4" [class.active]="currentStep() === 4">4</span>
+      <span class="step-line" [class.done]="currentStep() > 4"></span>
+      <span class="step-dot" [class.active]="currentStep() === 5">5</span>
+    </div>
+
+    <form [formGroup]="newAppointmentForm">
+      <div class="modal-body wizard-body">
+
+        <div class="alert-box fade-in" *ngIf="formError()">
+          <lucide-icon [name]="icons.AlertCircle" [strokeWidth]="2"></lucide-icon>
+          <span>{{ formError() }}</span>
+        </div>
+
+        <!-- STEP 1: Cliente -->
+        <div class="wizard-step fade-in-up" *ngIf="currentStep() === 1">
+          <div class="step-header">
+            <span class="step-icon blue"><lucide-icon [name]="icons.User" [strokeWidth]="2"></lucide-icon></span>
+            <div class="step-info">
+              <h3>Dados do Cliente</h3>
+              <p>Informe os dados de contato</p>
+            </div>
+          </div>
+          <div class="form-fields">
+            <div class="form-field">
+              <label>Nome completo *</label>
+              <input type="text" class="fi" formControlName="clientName" placeholder="Nome do cliente">
+            </div>
+            <div class="form-field">
+              <label>E-mail *</label>
+              <input type="email" class="fi" formControlName="clientEmail" placeholder="email@exemplo.com">
+            </div>
+            <div class="form-field">
+              <label>Telefone *</label>
+              <input type="tel" class="fi" formControlName="clientPhone"
+                     placeholder="(00) 00000-0000" (input)="onPhoneInput($event)" maxlength="15">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Serviço -->
+        <div class="wizard-step fade-in-up" *ngIf="currentStep() === 2">
+          <div class="step-header">
+            <span class="step-icon purple"><lucide-icon [name]="icons.Scissors" [strokeWidth]="2"></lucide-icon></span>
+            <div class="step-info">
+              <h3>Serviço</h3>
+              <p>Selecione o serviço desejado</p>
+            </div>
+          </div>
+          <div *ngIf="isLoadingServices()" class="inline-loading pulse-in">
+            <div class="spinner-sm"></div><span>Carregando...</span>
+          </div>
+          <div *ngIf="!isLoadingServices() && availableServices().length === 0" class="inline-empty fade-in">
+            <lucide-icon [name]="icons.AlertCircle" [strokeWidth]="2"></lucide-icon>
+            <span>Nenhum serviço disponível.</span>
+          </div>
+          <div *ngIf="!isLoadingServices() && availableServices().length > 0" class="options-list">
+            <div class="option-item stagger-in"
+                 *ngFor="let s of availableServices(); let i = index"
+                 [style.animation-delay.ms]="i * 30"
+                 [class.selected]="newAppointmentForm.get('serviceId')?.value === s.id"
+                 (click)="selectService(s.id)">
+              <span class="opt-icon purple"><lucide-icon [name]="icons.Scissors" [strokeWidth]="2"></lucide-icon></span>
+              <div class="opt-content">
+                <span class="opt-name">{{ s.name }}</span>
+                <span class="opt-meta">{{ s.durationMinutes }} min</span>
+              </div>
+              <span class="opt-check" *ngIf="newAppointmentForm.get('serviceId')?.value === s.id">
+                <lucide-icon [name]="icons.CheckCircle" [strokeWidth]="2"></lucide-icon>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Profissional -->
+        <div class="wizard-step fade-in-up" *ngIf="currentStep() === 3">
+          <div class="step-header">
+            <span class="step-icon green"><lucide-icon [name]="icons.UserCheck" [strokeWidth]="2"></lucide-icon></span>
+            <div class="step-info">
+              <h3>Profissional</h3>
+              <p>Quem vai atender</p>
+            </div>
+          </div>
+          <div *ngIf="isLoadingProfessionals()" class="inline-loading pulse-in">
+            <div class="spinner-sm"></div><span>Buscando...</span>
+          </div>
+          <div *ngIf="!isLoadingProfessionals() && modalProfessionals().length === 0" class="inline-empty fade-in">
+            <lucide-icon [name]="icons.AlertCircle" [strokeWidth]="2"></lucide-icon>
+            <span>Nenhum profissional disponível.</span>
+          </div>
+          <div *ngIf="!isLoadingProfessionals() && modalProfessionals().length > 0" class="options-list">
+            <div class="option-item professional stagger-in"
+                 *ngFor="let p of paginatedProfessionals(); let i = index"
+                 [style.animation-delay.ms]="i * 30"
+                 [class.selected]="newAppointmentForm.get('professionalUserId')?.value === p.id"
+                 (click)="selectProfessional(p.id)">
+              <span class="avatar">{{ p.name.charAt(0) }}</span>
+              <span class="opt-name flex-1">{{ p.name }}</span>
+              <span class="opt-check" *ngIf="newAppointmentForm.get('professionalUserId')?.value === p.id">
+                <lucide-icon [name]="icons.CheckCircle" [strokeWidth]="2"></lucide-icon>
+              </span>
+            </div>
+          </div>
+          <div class="mini-pagination" *ngIf="totalProfessionalPages() > 1">
+            <button type="button" class="mini-btn" (click)="prevProfessionalPage()" [disabled]="professionalPage() === 0">
+              <lucide-icon [name]="icons.ChevronLeft" [strokeWidth]="2"></lucide-icon>
+            </button>
+            <span>{{ professionalPage() + 1 }} / {{ totalProfessionalPages() }}</span>
+            <button type="button" class="mini-btn" (click)="nextProfessionalPage()" [disabled]="professionalPage() >= totalProfessionalPages() - 1">
+              <lucide-icon [name]="icons.ChevronRight" [strokeWidth]="2"></lucide-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Data e Horário -->
+        <div class="wizard-step fade-in-up" *ngIf="currentStep() === 4">
+          <div class="step-header">
+            <span class="step-icon orange"><lucide-icon [name]="icons.CalendarDays" [strokeWidth]="2"></lucide-icon></span>
+            <div class="step-info">
+              <h3>Data e Horário</h3>
+              <p>Quando será o atendimento</p>
+            </div>
+          </div>
+
+          <div class="form-fields">
+            <div class="form-field">
+              <label>Data *</label>
+              <input type="date" class="fi" formControlName="date" [min]="todayDate" (change)="onDateChange()">
+            </div>
+          </div>
+
+          <!-- Loading slots -->
+          <div *ngIf="newAppointmentForm.get('date')?.value && isLoadingSlots()" class="inline-loading pulse-in">
+            <div class="spinner-sm"></div><span>Buscando horários disponíveis...</span>
+          </div>
+
+          <!-- Nenhum horário — texto completo sem cortar -->
+          <div *ngIf="newAppointmentForm.get('date')?.value && !isLoadingSlots() && availableSlots().length === 0"
+               class="inline-empty inline-empty--wrap fade-in">
+            <lucide-icon [name]="icons.CalendarX2" [strokeWidth]="2"></lucide-icon>
+            <span>Nenhum horário disponível para esta data. Tente outra data.</span>
+          </div>
+
+          <!-- Slots -->
+          <div class="slots-section slide-down"
+               *ngIf="newAppointmentForm.get('date')?.value && !isLoadingSlots() && availableSlots().length > 0">
+
+            <!-- Aviso de seleção obrigatória -->
+            <div class="slot-hint" *ngIf="!selectedSlot()">
+              <lucide-icon [name]="icons.AlertCircle" [strokeWidth]="2"></lucide-icon>
+              <span>Selecione um horário para continuar</span>
+            </div>
+
+            <div class="slots-header">
+              <span>Horários Disponíveis</span>
+              <span class="slots-count">{{ availableSlots().length }}</span>
+            </div>
+            <div class="slots-grid">
+              <button type="button" class="slot-btn stagger-in"
+                      *ngFor="let slot of paginatedSlots(); let i = index"
+                      [style.animation-delay.ms]="i * 15"
+                      [class.selected]="selectedSlot()?.start === slot.start"
+                      (click)="selectSlot(slot)">
+                {{ slot.start }}
+              </button>
+            </div>
+            <div class="mini-pagination" *ngIf="totalSlotPages() > 1">
+              <button type="button" class="mini-btn" (click)="prevSlotPage()" [disabled]="slotPage() === 0">
+                <lucide-icon [name]="icons.ChevronLeft" [strokeWidth]="2"></lucide-icon>
+              </button>
+              <span>{{ slotPage() + 1 }} / {{ totalSlotPages() }}</span>
+              <button type="button" class="mini-btn" (click)="nextSlotPage()" [disabled]="slotPage() >= totalSlotPages() - 1">
+                <lucide-icon [name]="icons.ChevronRight" [strokeWidth]="2"></lucide-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5: Confirmação -->
+        <div class="wizard-step fade-in-up" *ngIf="currentStep() === 5">
+          <div class="step-header">
+            <span class="step-icon teal"><lucide-icon [name]="icons.CheckCircle" [strokeWidth]="2"></lucide-icon></span>
+            <div class="step-info">
+              <h3>Confirmação</h3>
+              <p>Revise antes de finalizar</p>
+            </div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-header">
+              <lucide-icon [name]="icons.CheckCircle" [strokeWidth]="2"></lucide-icon>
+              <span>Resumo do Agendamento</span>
+            </div>
+            <div class="summary-rows">
+              <div class="summary-item">
+                <span class="s-label">Cliente</span>
+                <span class="s-value">{{ newAppointmentForm.get('clientName')?.value }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">E-mail</span>
+                <span class="s-value">{{ newAppointmentForm.get('clientEmail')?.value }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Telefone</span>
+                <span class="s-value">{{ newAppointmentForm.get('clientPhone')?.value }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Serviço</span>
+                <span class="s-value">{{ getSelectedServiceName() }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Profissional</span>
+                <span class="s-value">{{ getSelectedProfessionalName() }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Data</span>
+                <span class="s-value">{{ newAppointmentForm.get('date')?.value | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Horário</span>
+                <span class="s-value">{{ selectedSlot()?.start }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer between">
+        <button type="button" class="btn-ghost" *ngIf="currentStep() > 1" (click)="prevStep()">
+          <lucide-icon [name]="icons.ChevronLeft" [strokeWidth]="2"></lucide-icon>
+          Voltar
+        </button>
+        <button type="button" class="btn-ghost" *ngIf="currentStep() === 1" (click)="closeNewAppointmentModal()">
+          Cancelar
+        </button>
+        <button type="button" class="btn-primary" *ngIf="currentStep() < 5"
+                (click)="nextStep()" [disabled]="!canGoNext()">
+          Continuar
+          <lucide-icon [name]="icons.ChevronRight" [strokeWidth]="2"></lucide-icon>
+        </button>
+        <button type="button" class="btn-primary" *ngIf="currentStep() === 5"
+                (click)="submitNewAppointment()" [disabled]="isSavingAppointment()">
+          <div *ngIf="isSavingAppointment()" class="spinner-xs"></div>
+          <span *ngIf="!isSavingAppointment()">Confirmar</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================================================
+     MODAL: CANCELAR
+     ================================================ -->
+<div class="modal-overlay" *ngIf="showCancelModal()">
+  <div class="modal-card modal-sm fade-in-up">
+    <div class="modal-header">
+      <h2>Cancelar Agendamento</h2>
+      <button class="close-btn-circle" (click)="closeCancelModal()">
+        <lucide-icon [name]="icons.X" [strokeWidth]="2"></lucide-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="cancel-info-box">
+        <span class="code-tag lg">{{ appointmentToCancel()?.code || '#' + appointmentToCancel()?.id }}</span>
+        <h4>{{ appointmentToCancel()?.serviceName }}</h4>
+        <p>{{ appointmentToCancel()?.clientName }}</p>
+        <p>{{ appointmentToCancel()?.startAt | date:"dd/MM/yyyy 'às' HH:mm" }}</p>
+      </div>
+      <div class="form-field">
+        <label>Motivo (opcional)</label>
+        <textarea class="fi fi-textarea" [(ngModel)]="cancelMessage"
+                  placeholder="Ex: Cliente solicitou alteração..." rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer between">
+      <button type="button" class="btn-ghost" (click)="closeCancelModal()">Manter</button>
+      <button type="button" class="btn-danger" (click)="confirmCancel()" [disabled]="isCancelling()">
+        <div *ngIf="isCancelling()" class="spinner-xs"></div>
+        <span *ngIf="!isCancelling()">Cancelar</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================
+     MODAL: SUCESSO
+     ================================================ -->
+<div class="modal-overlay" *ngIf="showSuccessModal()">
+  <div class="modal-card modal-xs fade-in-up">
+    <div class="modal-body center">
+      <div class="success-icon-wrap">
+        <lucide-icon [name]="icons.Check" [strokeWidth]="3"></lucide-icon>
+      </div>
+      <h3 class="success-title">{{ successTitle() }}</h3>
+      <p class="success-msg">{{ successMessage() }}</p>
+      <button class="btn-download full"
+              *ngIf="successAppt"
+              (click)="downloadReceipt(successAppt!, true)"
+              [disabled]="isDownloadingPdf()">
+        <div *ngIf="isDownloadingPdf()" class="spinner-xs"></div>
+        <lucide-icon *ngIf="!isDownloadingPdf()" [name]="icons.FileDown" [strokeWidth]="2"></lucide-icon>
+        <span>{{ isDownloadingPdf() ? 'Gerando PDF...' : 'Baixar Comprovante' }}</span>
+      </button>
+      <button class="btn-primary full" [style.margin-top.px]="successAppt ? 8 : 0" (click)="closeSuccessModal()">
+        Entendido
+      </button>
+    </div>
+  </div>
+</div>

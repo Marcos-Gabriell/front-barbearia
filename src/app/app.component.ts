@@ -14,17 +14,19 @@ import { ToastContainerComponent } from './core/ui/toast-container/toast-contain
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  private router = inject(Router);
+  private router       = inject(Router);
   private tokenService = inject(TokenService);
 
-  showSidebar = false;
+  showSidebar      = false;
   isMobileMenuOpen = false;
 
+  // Rotas sem sidebar — páginas isoladas (standalone/fullscreen)
   private readonly noSidebar = new Set([
-    'login', 
-    'not-found', 
-    'recuperar-senha', 
-    'setup-conta'
+    'login',
+    'not-found',
+    'recuperar-senha',
+    'setup-conta',
+    'cancelar-agendamento',  // ← adicionado: página pública de cancelamento
   ]);
 
   constructor() {
@@ -48,7 +50,7 @@ export class AppComponent {
   }
 
   private getFirstSegment(url: string): string {
-    const tree = this.router.parseUrl(url);
+    const tree     = this.router.parseUrl(url);
     const segments = tree.root.children['primary']?.segments ?? [];
     return segments[0]?.path ?? '';
   }

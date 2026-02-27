@@ -1,8 +1,8 @@
+// src/app/core/services/auth/auth.service.ts
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { Observable, of, tap, catchError } from 'rxjs';
 
 export type LoginPayload = {
   email: string;
@@ -28,13 +28,8 @@ export interface CompletePasswordResetRequest {
   confirmNewPassword: string;
 }
 
-export interface ValidateCodePayload {
-  email: string;
-  code: string;
-}
-
 export interface UserData {
-  userId: number;
+  userId: number | string;
   email: string;
   role: string;
   authorities: string[];
@@ -69,11 +64,13 @@ export class AuthService {
 
   refreshToken(): Observable<LoginResponse> {
     const refreshToken = this.getRefreshToken();
-    return this.http.post<LoginResponse>(`${this.baseUrl}/refresh`, { refreshToken }).pipe(
-      tap((response) => {
-        this.saveTokens(response.data.token, response.data.refreshToken);
-      })
-    );
+    return this.http
+      .post<LoginResponse>(`${this.baseUrl}/refresh`, { refreshToken })
+      .pipe(
+        tap((response) => {
+          this.saveTokens(response.data.token, response.data.refreshToken);
+        })
+      );
   }
 
   requestRecovery(email: string): Observable<any> {
@@ -124,17 +121,10 @@ export class AuthService {
   }
 
   isTokenExpired(token: string): boolean {
-    if (!token) return true;
-
-    try {
-      const payload = this.decodeToken(token);
-      if (!payload || !payload.exp) return true;
-
-      const currentTime = Math.floor(Date.now() / 1000);
-      return payload.exp < currentTime;
-    } catch (error) {
-      return true;
-    }
+    const payload = this.decodeToken(token);
+    if (!payload?.exp) return true;
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp < now;
   }
 
   private decodeToken(token: string): any {
@@ -142,64 +132,63 @@ export class AuthService {
 
     try {
       const base64Url = token.split('.')[1];
+      if (!base64Url) return null;
+
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        window.atob(base64)
+      const json = decodeURIComponent(
+        atob(base64)
           .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
           .join('')
       );
-      return JSON.parse(jsonPayload);
-    } catch (e) {
+
+      return JSON.parse(json);
+    } catch {
       return null;
     }
-  }
-
-  getUserRole(): string {
-    const userData = this.getCurrentUserData();
-    return userData?.role || '';
-  }
-
-  getUserId(): number | null {
-    const userData = this.getCurrentUserData();
-    return userData?.userId || null;
   }
 
   getCurrentUserData(): UserData | null {
     const token = this.getAccessToken();
     if (!token) return null;
 
-    try {
-      const payload = this.decodeToken(token);
-      if (!payload) return null;
+    const payload = this.decodeToken(token);
+    if (!payload) return null;
 
-      let role = '';
-      if (payload.authorities && Array.isArray(payload.authorities)) {
-        const authority = payload.authorities[0];
-        role = authority.replace('ROLE_', '');
-      }
+    const authorities: string[] = Array.isArray(payload.authorities) ? payload.authorities : [];
 
-      return {
-        userId: payload.userId || payload.sub || payload.id,
-        email: payload.email || payload.sub,
-        role: role,
-        authorities: payload.authorities || [],
-        exp: payload.exp,
-        iat: payload.iat
-      };
-    } catch (error) {
-      console.error('Erro ao decodificar token:', error);
-      return null;
-    }
+    // tenta role via authorities[0], depois via payload.role
+    const roleFromAuthorities =
+      authorities[0]?.startsWith('ROLE_') ? authorities[0].replace('ROLE_', '') : authorities[0];
+
+    const role = (roleFromAuthorities || payload.role || '').toString();
+
+    return {
+      userId: payload.userId ?? payload.id ?? payload.sub,
+      email: payload.email ?? payload.sub ?? '',
+      role,
+      authorities,
+      exp: payload.exp,
+      iat: payload.iat,
+    };
+  }
+
+  getUserRole(): string {
+    return this.getCurrentUserData()?.role || '';
+  }
+
+  getUserId(): number | null {
+    const v = this.getCurrentUserData()?.userId;
+    if (v == null) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
   }
 
   hasRole(role: string): boolean {
-    const userRole = this.getUserRole();
-    return userRole === role;
+    return this.getUserRole() === role;
   }
 
   hasAnyRole(roles: string[]): boolean {
-    const userRole = this.getUserRole();
-    return roles.includes(userRole);
+    return roles.includes(this.getUserRole());
   }
 }

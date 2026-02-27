@@ -1,0 +1,786 @@
+// ============================================
+// APPOINTMENTS — Mobile-First
+// ============================================
+
+$primary: var(--primary);
+$accent: #10b981;
+$danger: #ef4444;
+$warning: #f59e0b;
+$success: #10b981;
+
+$text-main: var(--text-main);
+$text-muted: var(--text-muted);
+$border-color: var(--border-color);
+$bg-card: var(--bg-card);
+$bg-body: var(--bg-body);
+
+$colors: (
+  blue: #3b82f6,
+  purple: #a855f7,
+  orange: #f97316,
+  green: #10b981,
+  teal: #14b8a6,
+  pink: #ec4899,
+  muted: #94a3b8,
+  confirmed-color: #10b981
+);
+
+// ============================================
+// PAGE
+// ============================================
+.page-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 24px;
+
+  @media (max-width: 768px) { padding: 10px 6px 10px 0; }
+}
+
+// ============================================
+// HEADER
+// ============================================
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+
+  .header-title {
+    h1 { font-size: 22px; font-weight: 700; color: $text-main; margin: 0; }
+    p  { font-size: 13px; color: $text-muted; margin: 3px 0 0; }
+  }
+
+  .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  @media (max-width: 768px) {
+    margin-bottom: 10px;
+    .header-title {
+      h1 { font-size: 15px; line-height: 1.2; }
+      .header-sub { display: none; }
+    }
+  }
+}
+
+// ============================================
+// BOTÃO FILTRO (mobile only)
+// ============================================
+.btn-filter-toggle {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    width: 36px; height: 36px;
+    border: 1px solid $border-color; border-radius: 10px;
+    background: $bg-card; color: $text-muted; cursor: pointer;
+    transition: all 0.2s; flex-shrink: 0;
+    lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; }
+    &.active { border-color: $accent; color: $accent; background: rgba($accent, 0.08); }
+  }
+}
+
+.filter-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: $accent; border: 1.5px solid $bg-card;
+}
+
+// ============================================
+// BOTÃO NOVO AGENDAMENTO
+// ============================================
+.btn-new {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 7px; padding: 10px 20px;
+  background: $primary; color: white;
+  border: none; border-radius: 50px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
+  lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; }
+  &:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba($accent, 0.35); }
+
+  @media (max-width: 768px) {
+    padding: 9px 14px; font-size: 13px; border-radius: 10px; gap: 5px;
+    lucide-icon { width: 14px; height: 14px; }
+  }
+
+  @media (max-width: 380px) {
+    span { display: none; }
+    padding: 9px 11px;
+  }
+}
+
+// ============================================
+// FILTROS — colapsável no mobile
+// ============================================
+.filters-bar {
+  display: grid;
+  grid-template-columns: 1fr 160px 140px 140px auto;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: 12px;
+  align-items: center;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr 1fr;
+    .filter-search { grid-column: 1 / -1; }
+    .btn-clear     { grid-column: 1 / -1; justify-self: end; }
+  }
+
+  @media (max-width: 768px) {
+    // Oculto por padrão — abre via btn-filter-toggle
+    display: none;
+    padding: 10px; gap: 7px; border-radius: 10px; margin-bottom: 10px;
+    grid-template-columns: 1fr 1fr;
+    .filter-search { grid-column: 1 / -1; }
+    .btn-clear     { grid-column: 1 / -1; justify-self: end; }
+
+    &.filters-open {
+      display: grid;
+      animation: slideDown 0.2s ease;
+    }
+  }
+
+  @media (max-width: 380px) {
+    grid-template-columns: 1fr;
+    .filter-search, .btn-clear { grid-column: 1; }
+  }
+}
+
+.filter-search {
+  position: relative; display: flex; align-items: center;
+  .field-icon {
+    position: absolute; left: 9px; width: 14px; height: 14px;
+    color: $text-muted; display: flex; align-items: center; pointer-events: none;
+  }
+  .fi { padding-left: 30px; }
+}
+
+// ============================================
+// FI — INPUT UNIFICADO
+// ============================================
+.fi {
+  width: 100%; height: 36px; padding: 0 10px;
+  border: 1px solid $border-color; border-radius: 8px;
+  background: $bg-card; color: $text-main; font-size: 13px;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box;
+  &::placeholder { color: $text-muted; font-size: 12px; }
+  &:focus { border-color: $accent; box-shadow: 0 0 0 3px rgba($accent, 0.12); }
+  &.fi-date { width: 140px; }
+  &.fi-textarea { height: auto; min-height: 64px; padding: 9px 12px; resize: none; }
+
+  @media (max-width: 860px) { &.fi-date { width: 100%; } }
+  @media (max-width: 768px) { height: 34px; &.fi-date { width: 100%; } }
+}
+
+select.fi {
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+}
+
+.btn-clear {
+  width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid $border-color; border-radius: 8px; background: transparent; color: $text-muted;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  lucide-icon { width: 14px; height: 14px; display: flex; align-items: center; }
+  &:hover { border-color: $danger; color: $danger; background: rgba($danger, 0.07); }
+}
+
+// ============================================
+// LOADING & EMPTY
+// ============================================
+.loading-state {
+  text-align: center; padding: 60px 20px; color: $text-muted;
+  p { margin-top: 10px; font-size: 14px; }
+}
+
+.spinner {
+  width: 26px; height: 26px; border: 2px solid $border-color;
+  border-top-color: $accent; border-radius: 50%;
+  animation: spin 0.7s linear infinite; margin: 0 auto;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state {
+  text-align: center; padding: 56px 20px;
+  background: $bg-card; border-radius: 14px; border: 1px solid $border-color;
+  .empty-icon {
+    width: 60px; height: 60px; margin: 0 auto 14px;
+    background: rgba($accent, 0.1); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; color: $accent;
+    lucide-icon { width: 28px; height: 28px; display: flex; align-items: center; }
+  }
+  h3 { font-size: 16px; font-weight: 700; color: $text-main; margin: 0 0 6px; }
+  p  { font-size: 13px; color: $text-muted; margin: 0; }
+}
+
+// ============================================
+// GRID DE CARDS
+// ============================================
+.grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+
+  @media (max-width: 720px) { grid-template-columns: 1fr; gap: 8px; }
+
+  @media (max-width: 768px) {
+    // Cards ocupam toda a largura no mobile
+    width: 100%;
+    margin: 0;
+  }
+}
+
+// ============================================
+// CARD
+// ============================================
+.card {
+  background: $bg-card; border: 1px solid $border-color;
+  border-radius: 12px; overflow: hidden; transition: all 0.2s;
+  &:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+  &.status-pending   { border-left: 3px solid $warning; }
+  &.status-confirmed { border-left: 3px solid $success; }
+  &.status-cancelled { border-left: 3px solid $danger; opacity: 0.75; }
+
+  @media (max-width: 768px) {
+    border-radius: px;
+    &:hover { transform: none; box-shadow: none; }
+  }
+}
+
+.card-top {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.02); border-bottom: 1px solid $border-color;
+  .dark-theme & { background: rgba(255,255,255,0.02); }
+
+  @media (max-width: 768px) { padding: 7px 10px; }
+}
+
+.code-tag {
+  font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; font-weight: 700;
+  background: rgba($accent, 0.12); color: $accent; padding: 3px 8px; border-radius: 5px;
+  display: inline-flex; align-items: center;
+  &.lg { font-size: 13px; padding: 5px 11px; }
+}
+
+.status-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+  padding: 3px 9px; border-radius: 12px; display: inline-flex; align-items: center;
+  &.pending   { background: rgba($warning, 0.15); color: $warning; }
+  &.confirmed { background: rgba($success, 0.15); color: $success; }
+  &.cancelled { background: rgba($danger, 0.15);  color: $danger;  }
+  &.noshow    { background: rgba(#64748b, 0.15);  color: #64748b; }
+  &.lg        { font-size: 11px; padding: 5px 11px; }
+}
+
+.card-body {
+  padding: 10px 12px;
+  .service { font-size: 13px; font-weight: 700; color: $text-main; margin: 0 0 7px; }
+
+  @media (max-width: 768px) {
+    padding: 8px 10px;
+    .service { font-size: 12.5px; margin-bottom: 6px; }
+  }
+}
+
+.info-line {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+  &:last-child { margin-bottom: 0; }
+}
+
+.ico {
+  width: 22px; height: 22px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  lucide-icon { width: 12px; height: 12px; display: flex; align-items: center; }
+  @each $name, $color in $colors {
+    &.#{$name} { background: rgba($color, 0.12); color: $color; }
+  }
+}
+
+.txt { font-size: 12px; color: $text-muted; line-height: 1.4; }
+
+// ============================================
+// CARD ACTIONS
+// ============================================
+.card-actions {
+  display: flex; gap: 6px; padding: 8px 12px;
+  border-top: 1px dashed $border-color; background: rgba(0,0,0,0.02);
+  .dark-theme & { background: rgba(255,255,255,0.02); }
+
+  @media (max-width: 768px) { padding: 7px 10px; }
+}
+
+.action-btn {
+  flex: 1; height: 32px; border-radius: 7px; border: none;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  lucide-icon { width: 14px; height: 14px; display: flex; align-items: center; }
+  &:disabled { opacity: 0.22; cursor: not-allowed; }
+  &.view    { background: rgba($accent, 0.12);  color: $accent;   &:hover:not(:disabled) { background: rgba($accent, 0.22); } }
+  &.confirm { background: rgba($success, 0.12); color: $success;  &:hover:not(:disabled) { background: rgba($success, 0.22); } }
+  &.cancel  { background: rgba($danger, 0.12);  color: $danger;   &:hover:not(:disabled) { background: rgba($danger, 0.22); } }
+
+  @media (max-width: 768px) {
+    height: 30px;
+    lucide-icon { width: 13px; height: 13px; }
+  }
+}
+
+// ============================================
+// PAGINATION
+// ============================================
+.pagination {
+  display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 20px;
+  .pg-info { font-size: 13px; font-weight: 600; color: $text-muted; }
+}
+
+.pg-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid $border-color;
+  background: $bg-card; color: $text-main; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  lucide-icon { width: 17px; height: 17px; display: flex; align-items: center; }
+  &:hover:not(:disabled) { border-color: $accent; color: $accent; }
+  &:disabled { opacity: 0.3; cursor: not-allowed; }
+}
+
+// ============================================
+// MODAL
+// ============================================
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(5px); display: flex; align-items: center;
+  justify-content: center; z-index: 1000; padding: 20px;
+  animation: overlayIn 0.2s ease;
+
+  @media (max-width: 768px) { padding: 0; align-items: flex-end; }
+}
+
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-card {
+  background: $bg-card; width: 100%; max-width: 560px; max-height: 90vh;
+  border-radius: 16px; border: 1px solid $border-color;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25); overflow: hidden;
+  display: flex; flex-direction: column;
+  &.modal-sm      { max-width: 440px; }
+  &.modal-lg      { max-width: 580px; }
+  &.modal-xs      { max-width: 380px; }
+  &.modal-details { max-width: 540px; }
+
+  @media (max-width: 768px) {
+    max-width: 100% !important;
+    max-height: 96vh;
+    border-radius: 18px 18px 0 0;
+    border-bottom: none;
+
+    // Wizard: tela 100% — experiência de app nativo
+    &.modal-lg {
+      max-height: 100dvh; // dvh para respeitar barra do browser no mobile
+      height: 100dvh;
+      border-radius: 0;
+      border: none;
+    }
+  }
+}
+
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 22px; border-bottom: 1px solid $border-color; flex-shrink: 0;
+  h2 { font-size: 17px; font-weight: 700; color: $text-main; margin: 0; }
+  .header-info {
+    h2 { margin-bottom: 2px; }
+    p  { font-size: 12px; color: $text-muted; margin: 0; }
+  }
+
+  @media (max-width: 768px) { padding: 14px 16px; h2 { font-size: 15px; } }
+}
+
+.close-btn-circle {
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: transparent; color: $text-muted; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+  lucide-icon { width: 17px; height: 17px; display: flex; align-items: center; }
+  &:hover { background: rgba($danger, 0.1); color: $danger; }
+}
+
+.modal-body {
+  padding: 22px; overflow-y: auto; flex: 1;
+  &.center { text-align: center; }
+  &.wizard-body { min-height: 300px; }
+
+  @media (max-width: 768px) { padding: 14px 16px; }
+}
+
+.modal-footer {
+  padding: 16px 22px; border-top: 1px solid $border-color;
+  background: rgba(0,0,0,0.02); display: flex;
+  justify-content: flex-end; gap: 10px; flex-shrink: 0;
+  .dark-theme & { background: rgba(255,255,255,0.02); }
+  &.between { justify-content: space-between; }
+
+  @media (max-width: 768px) {
+    padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px);
+  }
+}
+
+// ============================================
+// BADGES ROW (modal detalhes)
+// ============================================
+.badges-row { display: flex; gap: 12px; margin-bottom: 18px; }
+
+.badge-box {
+  flex: 1; display: flex; flex-direction: column; gap: 5px;
+  padding: 14px 16px; background: rgba(0,0,0,0.03);
+  border-radius: 10px; border: 1px solid $border-color;
+  .dark-theme & { background: rgba(255,255,255,0.03); }
+  .badge-label { font-size: 10px; font-weight: 700; color: $text-muted; text-transform: uppercase; }
+}
+
+.divider { height: 1px; background: $border-color; margin: 18px 0; }
+
+// ============================================
+// FIELDS LIST
+// ============================================
+.fields-list { display: flex; flex-direction: column; }
+
+.field-row {
+  display: flex; align-items: center; gap: 14px; padding: 13px 0;
+  border-bottom: 1px solid $border-color;
+  &:last-child { border-bottom: none; }
+
+  @media (max-width: 768px) { padding: 10px 0; gap: 10px; }
+}
+
+.field-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  lucide-icon { width: 17px; height: 17px; display: flex; align-items: center; }
+  @each $name, $color in $colors {
+    &.#{$name} { background: rgba($color, 0.12); color: $color; }
+  }
+
+  @media (max-width: 768px) {
+    width: 32px; height: 32px; border-radius: 8px;
+    lucide-icon { width: 14px; height: 14px; }
+  }
+}
+
+.field-info {
+  flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  .label { font-size: 11px; font-weight: 600; color: $text-muted; text-transform: uppercase; }
+  .value { font-size: 14px; font-weight: 500; color: $text-main; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  @media (max-width: 768px) { .value { font-size: 13px; } }
+}
+
+.origin-chip {
+  display: inline-flex; align-items: center; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 8px;
+  background: rgba($accent, 0.12); color: $accent;
+  &.cancel { background: rgba($danger, 0.12); color: $danger; }
+}
+
+// ============================================
+// AUDIT CANCEL CARD
+// ============================================
+.audit-cancel-card {
+  margin-top: 18px; background: rgba($danger, 0.04);
+  border: 1px solid rgba($danger, 0.18); border-radius: 12px; overflow: hidden;
+}
+
+.audit-cancel-header {
+  display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+  background: rgba($danger, 0.08); border-bottom: 1px solid rgba($danger, 0.12);
+  font-size: 13px; font-weight: 700; color: $danger;
+  lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; }
+}
+
+.audit-cancel-rows { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.audit-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  .a-label { font-size: 11px; font-weight: 600; color: $text-muted; text-transform: uppercase; min-width: 90px; padding-top: 2px; }
+  .a-value { font-size: 13px; font-weight: 500; color: $text-main; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; &.italic { font-style: italic; color: $text-muted; } }
+}
+
+// ============================================
+// FORM FIELDS
+// ============================================
+.form-fields { display: flex; flex-direction: column; gap: 12px; }
+
+.form-field {
+  display: flex; flex-direction: column; gap: 4px;
+  label { font-size: 11px; font-weight: 600; color: $text-muted; text-transform: uppercase; }
+}
+
+// ============================================
+// WIZARD
+// ============================================
+.progress-bar {
+  height: 3px; background: $border-color;
+  .progress-fill { height: 100%; background: linear-gradient(90deg, $accent, lighten($accent, 10%)); transition: width 0.35s ease; }
+}
+
+.steps-row {
+  display: flex; align-items: center; justify-content: center; padding: 14px 18px; gap: 0;
+}
+
+.step-dot {
+  width: 28px; height: 28px; border-radius: 50%; background: $border-color;
+  color: $text-muted; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; transition: all 0.3s; flex-shrink: 0;
+  &.done   { background: rgba($accent, 0.2); color: $accent; }
+  &.active { background: $accent; color: white; box-shadow: 0 0 0 4px rgba($accent, 0.2); }
+}
+
+.step-line { width: 22px; height: 2px; background: $border-color; transition: background 0.3s; &.done { background: $accent; } }
+.wizard-step { animation: fadeInUp 0.25s ease; }
+.step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+
+.step-icon {
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  lucide-icon { width: 20px; height: 20px; display: flex; align-items: center; }
+  @each $name, $color in $colors {
+    &.#{$name} { background: rgba($color, 0.12); color: $color; }
+  }
+}
+
+.step-info {
+  h3 { font-size: 16px; font-weight: 700; color: $text-main; margin: 0; }
+  p  { font-size: 12px; color: $text-muted; margin: 2px 0 0; }
+}
+
+// ============================================
+// OPTIONS LIST
+// ============================================
+.options-list { display: flex; flex-direction: column; gap: 7px; }
+
+.option-item {
+  display: flex; align-items: center; gap: 11px; padding: 11px 13px;
+  border: 1px solid $border-color; border-radius: 10px; background: $bg-card;
+  cursor: pointer; transition: all 0.2s;
+  &:hover    { border-color: rgba($accent, 0.45); transform: translateY(-1px); }
+  &.selected { border-color: $accent; background: rgba($accent, 0.05); }
+  &.professional {
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba($accent, 0.12); color: $accent;
+      font-weight: 700; font-size: 15px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+  }
+
+  @media (max-width: 768px) { padding: 10px 12px; &:hover { transform: none; } }
+}
+
+.opt-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; }
+  @each $name, $color in $colors {
+    &.#{$name} { background: rgba($color, 0.12); color: $color; }
+  }
+}
+
+.opt-content { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.opt-name    { font-size: 13px; font-weight: 600; color: $text-main; }
+.opt-meta    { font-size: 11px; color: $text-muted; }
+.opt-check   { color: $accent; display: flex; align-items: center; justify-content: center; lucide-icon { width: 18px; height: 18px; display: flex; align-items: center; } }
+.flex-1      { flex: 1; min-width: 0; }
+
+// ============================================
+// MINI PAGINATION
+// ============================================
+.mini-pagination {
+  display: flex; justify-content: center; align-items: center;
+  gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid $border-color;
+  span { font-size: 12px; font-weight: 600; color: $text-muted; }
+}
+
+.mini-btn {
+  width: 30px; height: 30px; border-radius: 7px; border: 1px solid $border-color;
+  background: transparent; color: $text-muted; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  lucide-icon { width: 14px; height: 14px; display: flex; align-items: center; }
+  &:hover:not(:disabled) { border-color: $accent; color: $accent; }
+  &:disabled { opacity: 0.3; cursor: not-allowed; }
+}
+
+// ============================================
+// SLOTS
+// ============================================
+.slots-section { margin-top: 14px; }
+
+.slots-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+  span { font-size: 13px; font-weight: 600; color: $text-main; }
+  .slots-count { font-size: 10px; font-weight: 700; color: $accent; background: rgba($accent, 0.12); padding: 2px 9px; border-radius: 10px; }
+}
+
+.slots-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  @media (max-width: 480px) { grid-template-columns: repeat(3, 1fr); }
+}
+
+.slot-btn {
+  padding: 10px 4px; border: 1px solid $border-color; border-radius: 8px;
+  background: $bg-card; color: $text-main; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+  &:hover { border-color: $accent; }
+  &.selected { background: $accent; border-color: $accent; color: white; box-shadow: 0 3px 10px rgba($accent, 0.35); }
+}
+
+.slot-hint {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: $warning; font-weight: 500;
+  padding: 9px 12px; margin-bottom: 10px;
+  background: rgba($warning, 0.07); border: 1px solid rgba($warning, 0.2);
+  border-radius: 10px; animation: fadeIn 0.25s ease;
+  lucide-icon { width: 14px; height: 14px; display: flex; align-items: center; flex-shrink: 0; }
+}
+
+// ============================================
+// SUMMARY CARD
+// ============================================
+.summary-card {
+  background: rgba($success, 0.04); border: 1px solid rgba($success, 0.2);
+  border-radius: 12px; padding: 14px;
+}
+
+.summary-header {
+  display: flex; align-items: center; gap: 8px; color: $success; font-size: 13px;
+  font-weight: 700; margin-bottom: 12px; padding-bottom: 10px;
+  border-bottom: 1px solid rgba($success, 0.15);
+  lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; }
+}
+
+.summary-rows { display: flex; flex-direction: column; gap: 8px; }
+.summary-item {
+  display: flex; justify-content: space-between; font-size: 13px; gap: 8px;
+  .s-label { color: $text-muted; flex-shrink: 0; }
+  .s-value { color: $text-main; font-weight: 600; text-align: right; word-break: break-word; }
+}
+
+// ============================================
+// CANCEL INFO BOX
+// ============================================
+.cancel-info-box {
+  background: rgba($danger, 0.04); border: 1px solid rgba($danger, 0.18);
+  border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px;
+  .code-tag { margin-bottom: 8px; }
+  h4 { font-size: 15px; font-weight: 700; color: $text-main; margin: 6px 0 4px; }
+  p  { font-size: 13px; color: $text-muted; margin: 2px 0; }
+}
+
+// ============================================
+// BUTTONS
+// ============================================
+.btn-primary {
+  background: $primary; color: white; border: none; padding: 10px 20px;
+  border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.2s;
+  lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; }
+  &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba($accent, 0.35); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &.full { width: 100%; }
+}
+
+.btn-ghost {
+  background: transparent; color: $text-muted; border: 1px solid $border-color;
+  padding: 10px 20px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; transition: all 0.2s;
+  lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; }
+  &:hover { background: rgba(0,0,0,0.05); color: $text-main; }
+}
+
+.btn-danger {
+  background: $danger; color: white; border: none; padding: 10px 20px;
+  border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.2s;
+  &:hover:not(:disabled) { background: darken($danger, 7%); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.btn-download {
+  background: rgba($accent, 0.1); color: $accent; border: 1px solid rgba($accent, 0.28);
+  padding: 10px 20px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.2s;
+  lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; }
+  &:hover:not(:disabled) { background: rgba($accent, 0.2); border-color: $accent; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &.full { width: 100%; }
+}
+
+// ============================================
+// INLINE STATES
+// ============================================
+.inline-loading, .inline-empty {
+  display: flex; align-items: center; justify-content: center;
+  gap: 9px; padding: 14px; border-radius: 10px; font-size: 13px; width: 100%; box-sizing: border-box;
+  lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; flex-shrink: 0; }
+}
+
+.inline-loading { background: rgba($accent, 0.07); color: $accent; }
+.inline-empty   { background: rgba($warning, 0.07); color: $warning; }
+
+.inline-empty--wrap {
+  flex-wrap: wrap; text-align: center; padding: 10px 12px; font-size: 12px;
+  span { white-space: normal; word-break: break-word; line-height: 1.4; }
+}
+
+.spinner-sm {
+  width: 16px; height: 16px; border: 2px solid rgba($accent, 0.3);
+  border-top-color: $accent; border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+
+.spinner-xs {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+
+.alert-box {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  background: rgba($danger, 0.09); border: 1px solid rgba($danger, 0.2);
+  border-radius: 10px; color: $danger; font-size: 13px; margin-bottom: 16px; width: 100%; box-sizing: border-box;
+  lucide-icon { width: 16px; height: 16px; display: flex; align-items: center; flex-shrink: 0; }
+}
+
+// ============================================
+// SUCCESS MODAL
+// ============================================
+.success-icon-wrap {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: rgba($success, 0.12); border: 3px solid $success;
+  margin: 0 auto 18px; display: flex; align-items: center; justify-content: center;
+  color: $success; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  lucide-icon { width: 30px; height: 30px; display: flex; align-items: center; }
+}
+
+@keyframes popIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.success-title { font-size: 18px; font-weight: 700; color: $text-main; margin: 0 0 6px; }
+.success-msg   { font-size: 14px; color: $text-muted; margin: 0 0 20px; line-height: 1.5; }
+
+// ============================================
+// ANIMATIONS
+// ============================================
+.fade-in    { animation: fadeIn 0.3s ease; }
+.fade-in-up { animation: fadeInUp 0.28s ease; }
+.animate-up { animation: slideUp 0.3s ease; }
+.scale-in   { animation: scaleIn 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+.slide-down { animation: slideDown 0.3s ease; }
+.pulse-in   { animation: pulseIn 0.5s ease; }
+.stagger-in { animation: staggerIn 0.3s ease backwards; }
+
+@keyframes fadeIn    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp   { from { opacity: 0; transform: translateY(6px);  } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn   { from { opacity: 0; transform: scale(0.95); }     to { opacity: 1; transform: scale(1); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulseIn   { 0% { opacity: 0; transform: scale(0.94); } 50% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes staggerIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }

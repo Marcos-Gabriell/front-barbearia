@@ -1,0 +1,178 @@
+<div class="ca-page">
+
+  <div class="ca-bg-deco" aria-hidden="true">
+    <div class="deco-circle deco-1"></div>
+    <div class="deco-circle deco-2"></div>
+    <div class="deco-circle deco-3"></div>
+  </div>
+
+  <div class="ca-card" [class.ca-card--wide]="isState('confirm') || isState('canceling')">
+
+    <!-- ══════════════ LOADING ══════════════ -->
+    @if (isState('loading')) {
+      <div class="ca-state ca-state--center fade-in">
+        <div class="spinner-ring"></div>
+        <p class="ca-state__label">Verificando link de cancelamento…</p>
+      </div>
+    }
+
+    <!-- ══════════════ CONFIRM / CANCELING ══════════════ -->
+    @if (isState('confirm') || isState('canceling')) {
+      <div class="fade-in">
+
+        <div class="ca-header ca-header--warn">
+          <div class="ca-header__icon">
+            <lucide-icon [img]="CalendarX" [size]="22"></lucide-icon>
+          </div>
+          <div class="ca-header__text">
+            <h1>Cancelar Agendamento</h1>
+            <p>Revise os dados e confirme o cancelamento</p>
+          </div>
+        </div>
+
+        @if (appt()) {
+          <div class="ca-info-card">
+            <div class="ca-info-row">
+              <div class="ca-info-ico ca-info-ico--blue">
+                <lucide-icon [img]="Scissors" [size]="14"></lucide-icon>
+              </div>
+              <div class="ca-info-content">
+                <span class="ca-info-label">Serviço</span>
+                <span class="ca-info-value">{{ appt()!.serviceName }}</span>
+              </div>
+            </div>
+
+            <div class="ca-info-row">
+              <div class="ca-info-ico ca-info-ico--purple">
+                <lucide-icon [img]="User" [size]="14"></lucide-icon>
+              </div>
+              <div class="ca-info-content">
+                <span class="ca-info-label">Profissional</span>
+                <span class="ca-info-value">{{ appt()!.professionalName }}</span>
+              </div>
+            </div>
+
+            <div class="ca-info-row">
+              <div class="ca-info-ico ca-info-ico--orange">
+                <lucide-icon [img]="Clock" [size]="14"></lucide-icon>
+              </div>
+              <div class="ca-info-content">
+                <span class="ca-info-label">Data e Horário</span>
+                <span class="ca-info-value">{{ formattedDate() }} às {{ formattedTime() }}</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="ca-alert ca-alert--warn">
+          <lucide-icon [img]="AlertTriangle" [size]="15"></lucide-icon>
+          <p>Esta ação é <strong>irreversível</strong>. O cancelamento não poderá ser desfeito.</p>
+        </div>
+
+        <div class="ca-actions">
+          <button class="ca-btn ca-btn--ghost"
+                  (click)="goHome()"
+                  [disabled]="isState('canceling')">
+            Voltar
+          </button>
+          <button class="ca-btn ca-btn--danger"
+                  (click)="confirmCancel()"
+                  [disabled]="isState('canceling')">
+            @if (isState('canceling')) {
+              <span class="spinner-xs"></span>
+              Cancelando…
+            } @else {
+              <lucide-icon [img]="CalendarX" [size]="15"></lucide-icon>
+              Confirmar Cancelamento
+            }
+          </button>
+        </div>
+
+      </div>
+    }
+
+    <!-- ══════════════ SUCCESS ══════════════ -->
+    @if (isState('success')) {
+      <div class="ca-state ca-state--center scale-in">
+
+        <!-- Checkmark animado igual ao setup-account -->
+        <div class="ca-checkmark-wrap">
+          <svg class="ca-checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle class="ca-checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+            <path   class="ca-checkmark__check"  fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          </svg>
+        </div>
+
+        <h2 class="ca-state__title">Cancelamento Confirmado</h2>
+        <p class="ca-state__body">
+          Seu agendamento foi cancelado com sucesso.<br>
+          Você receberá um e-mail de confirmação em breve.
+        </p>
+
+        @if (appt()) {
+          <div class="ca-summary">
+            <span class="ca-summary__service">{{ appt()!.serviceName }}</span>
+            <span class="ca-summary__sep">com</span>
+            <span class="ca-summary__prof">{{ appt()!.professionalName }}</span>
+          </div>
+        }
+
+        <button class="ca-btn ca-btn--primary full-width" (click)="goHome()">
+          Fazer Novo Agendamento
+        </button>
+      </div>
+    }
+
+    <!-- ══════════════ ALREADY CANCELED ══════════════ -->
+    @if (isState('already-canceled')) {
+      <div class="ca-state ca-state--center fade-in">
+        <div class="ca-state__icon ca-state__icon--muted">
+          <lucide-icon [img]="XCircle" [size]="32"></lucide-icon>
+        </div>
+        <h2 class="ca-state__title">Já cancelado</h2>
+        <p class="ca-state__body">
+          Este agendamento já foi cancelado anteriormente.<br>
+          Não é necessária nenhuma ação.
+        </p>
+        <button class="ca-btn ca-btn--primary full-width" (click)="goHome()">
+          Fazer Novo Agendamento
+        </button>
+      </div>
+    }
+
+    <!-- ══════════════ EXPIRED ══════════════ -->
+    @if (isState('expired')) {
+      <div class="ca-state ca-state--center fade-in">
+        <div class="ca-state__icon ca-state__icon--warn">
+          <lucide-icon [img]="Clock" [size]="32"></lucide-icon>
+        </div>
+        <h2 class="ca-state__title">Link expirado</h2>
+        <p class="ca-state__body">
+          O cancelamento só é permitido até <strong>10 minutos antes</strong> do horário agendado.<br>
+          Este link não é mais válido.
+        </p>
+        <button class="ca-btn ca-btn--ghost full-width" (click)="goHome()">
+          Voltar ao início
+        </button>
+      </div>
+    }
+
+    <!-- ══════════════ ERROR ══════════════ -->
+    @if (isState('error')) {
+      <div class="ca-state ca-state--center fade-in">
+        <div class="ca-state__icon ca-state__icon--danger">
+          <lucide-icon [img]="XCircle" [size]="32"></lucide-icon>
+        </div>
+        <h2 class="ca-state__title">Algo deu errado</h2>
+        <p class="ca-state__body">{{ errMsg() || 'Ocorreu um erro inesperado. Tente novamente ou entre em contato.' }}</p>
+        <button class="ca-btn ca-btn--ghost full-width" (click)="goHome()">
+          Voltar ao início
+        </button>
+      </div>
+    }
+
+  </div>
+
+  <p class="ca-footer">© Barbearia Premium &nbsp;·&nbsp; Atendimento exclusivo</p>
+
+</div>

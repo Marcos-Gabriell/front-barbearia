@@ -34,8 +34,9 @@ export class SidebarComponent implements OnInit {
  
   menuItems = [ 
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard', roles: [] }, 
+       { icon: 'appointments', label: 'Agendamentos', route: '/agendamentos', roles: [] },
     { icon: 'catalog', label: 'Catálogo', route: '/catalogo', roles: ['DEV', 'ADMIN'] }, 
-    { icon: 'agenda', label: 'Gestão de Agendas', route: '/availability', roles: ['DEV', 'ADMIN'] }, 
+    { icon: 'agenda', label: 'Agenda', route: '/agenda', roles: ['DEV', 'ADMIN'] }, 
     { icon: 'finance', label: 'Financeiro', route: '/financeiro', roles: [] }, 
     { icon: 'users', label: 'Usuários', route: '/usuarios', roles: ['DEV', 'ADMIN'] }, 
   ]; 
