@@ -11,6 +11,17 @@ $border-color: var(--border-color);
 $bg-card: var(--bg-card);
 $bg-body: var(--bg-body);
 
+.page-loading {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 60px; color: $text-muted; font-size: 14px; font-weight: 500;
+}
+.spin {
+  width: 20px; height: 20px;
+  border: 2px solid $border-color; border-top-color: $primary;
+  border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .page-container {
   max-width: 1120px;
   margin: 52px auto; 

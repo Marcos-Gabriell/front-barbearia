@@ -24,9 +24,8 @@
   </header>
 
   @if (loading()) {
-    <div class="loading-state card animate-up">
-      <div class="spinner"></div>
-      <p>Carregando agendas...</p>
+    <div class="page-loading">
+      <div class="spin"></div><span>Carregando agendas...</span>
     </div>
   }
 
@@ -187,9 +186,8 @@
       </div>
 
       <div class="modal-body schedule-body" *ngIf="isScheduleLoading()">
-        <div class="schedule-loading pulse-in">
-          <div class="spinner"></div>
-          <p>Carregando disponibilidade...</p>
+        <div class="page-loading" style="padding: 32px 20px;">
+          <div class="spin"></div><span>Carregando disponibilidade...</span>
         </div>
       </div>
 

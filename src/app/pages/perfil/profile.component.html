@@ -7,9 +7,8 @@
   </header>
 
   @if (isLoading()) {
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <p>Carregando...</p>
+    <div class="page-loading">
+      <div class="spin"></div><span>Carregando...</span>
     </div>
   } @else {
     @if (user(); as u) {
@@ -295,9 +294,8 @@
           </div>
 
           <div class="modal-body schedule-body" *ngIf="isScheduleLoading()">
-            <div class="schedule-loading pulse-in">
-              <div class="spinner"></div>
-              <p>Carregando disponibilidade...</p>
+            <div class="page-loading" style="padding: 32px 20px;">
+              <div class="spin"></div><span>Carregando disponibilidade...</span>
             </div>
           </div>
 

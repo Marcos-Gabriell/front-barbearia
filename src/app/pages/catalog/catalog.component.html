@@ -11,9 +11,8 @@
     </button>
   </header>
 
-  <div *ngIf="isPageLoading" class="empty-state">
-    <div class="spinner" style="border-color: #10b981; border-top-color: transparent; margin: 0 auto 10px;"></div>
-    <p>Carregando catálogo...</p>
+  <div *ngIf="isPageLoading" class="page-loading">
+    <div class="spin"></div><span>Carregando catálogo...</span>
   </div>
 
   <div class="services-grid" *ngIf="!isPageLoading">

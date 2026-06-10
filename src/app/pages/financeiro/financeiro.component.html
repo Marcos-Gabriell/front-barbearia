@@ -6,7 +6,8 @@
       <p>Receita, despesas e desempenho</p>
     </div>
     <button class="btn-primary rounded" (click)="openCreate()">
-      <lucide-icon [name]="icons.Plus" [size]="16"></lucide-icon> Novo lançamento
+      <lucide-icon [name]="icons.Plus" [size]="16"></lucide-icon>
+      <span class="btn-text">Novo lançamento</span>
     </button>
   </header>
 
@@ -22,7 +23,7 @@
     </div>
   </div>
 
-  <div class="loading-row" *ngIf="loading()">
+  <div class="page-loading" *ngIf="loading()">
     <div class="spin"></div><span>Carregando...</span>
   </div>
 
@@ -70,13 +71,16 @@
 
     <div class="tab-bar">
       <button class="tab-btn" [class.active]="activeTab() === 'resumo'"       (click)="onTabChange('resumo')">
-        <lucide-icon [name]="icons.BarChart2"       [size]="14"></lucide-icon> Resumo
+        <lucide-icon [name]="icons.BarChart2"       [size]="15"></lucide-icon>
+        <span class="tab-label">Resumo</span>
       </button>
       <button class="tab-btn" [class.active]="activeTab() === 'agendamentos'" (click)="onTabChange('agendamentos')">
-        <lucide-icon [name]="icons.Users"           [size]="14"></lucide-icon> Por barbeiro/serviço
+        <lucide-icon [name]="icons.Users"           [size]="15"></lucide-icon>
+        <span class="tab-label">Por barbeiro/serviço</span>
       </button>
       <button class="tab-btn" [class.active]="activeTab() === 'lancamentos'"  (click)="onTabChange('lancamentos')">
-        <lucide-icon [name]="icons.ArrowUpCircle"   [size]="14"></lucide-icon> Lançamentos manuais
+        <lucide-icon [name]="icons.ArrowUpCircle"   [size]="15"></lucide-icon>
+        <span class="tab-label">Lançamentos manuais</span>
       </button>
     </div>
 

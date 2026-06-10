@@ -21,9 +21,8 @@
     </div>
   </div>
 
-  <div class="loading-state" *ngIf="loading()">
-    <div class="spinner"></div>
-    <p>Carregando clientes...</p>
+  <div class="page-loading" *ngIf="loading()">
+    <div class="spin"></div><span>Carregando clientes...</span>
   </div>
 
   <div class="empty-state animate-up" *ngIf="!loading() && filteredClients().length === 0">
@@ -119,8 +118,8 @@
     </div>
 
     <div class="modal-body">
-      <div class="loading-state" *ngIf="loadingHistory()">
-        <div class="spinner"></div>
+      <div class="page-loading" style="padding: 30px 20px;" *ngIf="loadingHistory()">
+        <div class="spin"></div><span>Carregando...</span>
       </div>
 
       <div *ngIf="!loadingHistory()">

@@ -37,7 +37,7 @@
 </header>
 
   <!-- Loading -->
-  <div class="dash-loading" *ngIf="loading()">
+  <div class="page-loading" *ngIf="loading()">
     <div class="spin"></div><span>Carregando...</span>
   </div>
 
@@ -312,48 +312,50 @@
     </section>
 
     <!-- Pills de período para Minha Agenda -->
-    <div class="period-pills" style="margin-bottom:16px">
-      <button *ngFor="let p of staffPeriods" class="period-pill"
-        [class.active]="staffPeriod() === p.value"
-        (click)="setStaffPeriod(p.value)">{{ p.label }}</button>
-    </div>
-
-    <div class="card">
-      <div class="card__head">
-        <div class="card__head-left">
-          <div class="card__icon card__icon--blue">
-            <lucide-icon [name]="icons.Scissors" [size]="14"></lucide-icon>
-          </div>
-          <h3>Agendamentos do dia</h3>
-        </div>
-        <span class="card__badge">{{ d.todayTotal }} agend. · {{ staffPeriodLabel() }}</span>
+    <div class="staff-section">
+      <div class="period-pills" style="margin-bottom:16px">
+        <button *ngFor="let p of staffPeriods" class="period-pill"
+          [class.active]="staffPeriod() === p.value"
+          (click)="setStaffPeriod(p.value)">{{ p.label }}</button>
       </div>
-      @if (d.todayAppointments.length) {
-        <div class="staff-tl">
-          <div class="staff-item" *ngFor="let a of d.todayAppointments"
-            [class]="'staff-item--' + a.status.toLowerCase()">
-            <div class="staff-time"><b>{{ fmtTime(a.startAt) }}</b><span>{{ a.durationMinutes }}min</span></div>
-            <div class="staff-body">
-              <span class="staff-client">{{ a.clientName }}</span>
-              <span class="staff-svc">{{ a.serviceName }}</span>
+
+      <div class="card">
+        <div class="card__head">
+          <div class="card__head-left">
+            <div class="card__icon card__icon--blue">
+              <lucide-icon [name]="icons.Scissors" [size]="14"></lucide-icon>
             </div>
-            <div class="staff-actions">
-              <span class="status-pill" [class]="getStatusClass(a.status)">{{ getStatusLabel(a.status) }}</span>
-              <button class="act-btn act-btn--confirm" *ngIf="a.canConfirm" (click)="confirmArrival(a.id)" title="Confirmar chegada">
-                <lucide-icon [name]="icons.UserCheck" [size]="14"></lucide-icon>
-              </button>
-              <button class="act-btn act-btn--noshow" *ngIf="a.canMarkNoShow" (click)="markNoShow(a.id)" title="No-show">
-                <lucide-icon [name]="icons.XCircle" [size]="14"></lucide-icon>
-              </button>
+            <h3>Agendamentos do dia</h3>
+          </div>
+          <span class="card__badge">{{ d.todayTotal }} agend. · {{ staffPeriodLabel() }}</span>
+        </div>
+        @if (d.todayAppointments.length) {
+          <div class="staff-tl">
+            <div class="staff-item" *ngFor="let a of d.todayAppointments"
+              [class]="'staff-item--' + a.status.toLowerCase()">
+              <div class="staff-time"><b>{{ fmtTime(a.startAt) }}</b><span>{{ a.durationMinutes }}min</span></div>
+              <div class="staff-body">
+                <span class="staff-client">{{ a.clientName }}</span>
+                <span class="staff-svc">{{ a.serviceName }}</span>
+              </div>
+              <div class="staff-actions">
+                <span class="status-pill" [class]="getStatusClass(a.status)">{{ getStatusLabel(a.status) }}</span>
+                <button class="act-btn act-btn--confirm" *ngIf="a.canConfirm" (click)="confirmArrival(a.id)" title="Confirmar chegada">
+                  <lucide-icon [name]="icons.UserCheck" [size]="14"></lucide-icon>
+                </button>
+                <button class="act-btn act-btn--noshow" *ngIf="a.canMarkNoShow" (click)="markNoShow(a.id)" title="No-show">
+                  <lucide-icon [name]="icons.XCircle" [size]="14"></lucide-icon>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      } @else {
-        <div class="empty-state">
-          <span class="empty-state__emoji">✂️</span>
-          <p>Nenhum agendamento para hoje.</p>
-        </div>
-      }
+        } @else {
+          <div class="empty-state">
+            <span class="empty-state__emoji">✂️</span>
+            <p>Nenhum agendamento para hoje.</p>
+          </div>
+        }
+      </div>
     </div>
 
   </ng-container>
