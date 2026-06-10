@@ -101,7 +101,7 @@ $bg-body: var(--bg-body, #f8fafc);
 .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; &.status { &.active { background: rgba(16, 185, 129, 0.15); color: #10b981; } &.inactive { background: rgba(239, 68, 68, 0.15); color: $danger; } } }
 .form-group { margin-bottom: 20px; position: relative; label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: $text-main; } }
 .modern-textarea { resize: vertical; min-height: 100px; font-family: inherit; &.no-resize { resize: none; height: 100px; } }
-.close-btn-circle { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: $text-muted; transition: all 0.2s; &:hover { background: rgba(0,0,0,0.05); color: $text-main; transform: rotate(90deg); } &:active { transform: scale(0.9); } }
+.close-btn-circle { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: $text-muted; transition: background-color 0.2s, color 0.2s; &:hover { background: rgba($danger, 0.12); color: $danger; } &:active { transform: scale(0.9); } }
 .warning-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; background: rgba(239, 68, 68, 0.1); &.yellow{ background: rgba(245, 158, 11, 0.1); } }
 .action-buttons-center { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
 .text-center { text-align: center; }
@@ -114,3 +114,12 @@ $bg-body: var(--bg-body, #f8fafc);
 @keyframes rotate-circle { 0% { transform: rotate(-45deg); } 5% { transform: rotate(-45deg); } 12% { transform: rotate(-405deg); } 100% { transform: rotate(-405deg); } }
 @keyframes icon-line-tip { 0% { width: 0; left: 1px; top: 19px; } 54% { width: 0; left: 1px; top: 19px; } 70% { width: 50px; left: -8px; top: 37px; } 84% { width: 17px; left: 21px; top: 48px; } 100% { width: 25px; left: 14px; top: 46px; } }
 @keyframes icon-line-long { 0% { width: 0; right: 46px; top: 54px; } 65% { width: 0; right: 46px; top: 54px; } 84% { width: 55px; right: 0px; top: 35px; } 100% { width: 47px; right: 8px; top: 38px; } }
+
+/* Foto nos chips de responsável */
+.avatar-mini-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}

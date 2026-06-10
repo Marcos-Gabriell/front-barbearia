@@ -26,7 +26,7 @@ export interface ScheduleRequestDTO {
 @Injectable({ providedIn: 'root' })
 export class MyAvailabilityService {
   private http = inject(HttpClient);
-  private readonly API_URL = 'http://localhost:8080/api/users/me';
+  private readonly API_URL = 'https://api.falcaobarbearia.com.br/api/users/me';
 
   getMySchedule(): Observable<ScheduleRequestDTO> {
     return this.http.get<ScheduleRequestDTO>(`${this.API_URL}/schedule`);

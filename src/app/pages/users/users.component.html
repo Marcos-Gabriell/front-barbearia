@@ -11,63 +11,72 @@
     </button>
   </header>
 
-  <div class="card table-container">
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th class="col-name">Nome</th>
-            <th class="col-email desktop-only">E-mail</th>
-            <th class="col-role desktop-only">Role</th>
-            <th class="col-status desktop-only">Status</th>
-            <th class="actions-col">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of paginatedUsers">
-            <td class="col-name">
-              <div class="user-info">
-                <div class="avatar-circle">{{ user.name.charAt(0) }}</div>
-                <span class="font-medium text-truncate">{{ user.name }}</span>
-              </div>
-            </td>
-            <td class="col-email desktop-only">{{ user.email }}</td>
-            <td class="col-role desktop-only">
+  <!-- LISTA DE USUÁRIOS EM CARDS -->
+  <div class="users-grid-container">
+    <div class="users-grid" *ngIf="users.length > 0">
+      <div class="user-card-item fade-in-up" *ngFor="let user of paginatedUsers">
+        
+        <!-- Cabeçalho do Card -->
+        <div class="user-card-header">
+          <div class="user-info">
+            <!-- Avatar com foto se disponível -->
+            @if (user.photoUrl) {
+              <img [src]="user.photoUrl" [alt]="user.name" class="avatar-photo-sm">
+            } @else {
+              <div class="avatar-circle">{{ user.name.charAt(0) }}</div>
+            }
+            <div class="user-details">
+              <span class="font-medium text-truncate" [title]="user.name">{{ user.name }}</span>
               <span class="badge role" [ngClass]="user.role.toLowerCase()">{{ user.role }}</span>
-            </td>
-            <td class="col-status desktop-only">
-              <span class="badge status" [class.active]="user.active" [class.inactive]="!user.active">
-                {{ user.active ? 'Ativo' : 'Inativo' }}
-              </span>
-            </td>
-            <td class="actions-col">
-              <div class="action-buttons">
-                <button *ngIf="user.id !== currentUserId && !user.active" class="action-btn success" (click)="toggleActive(user)" title="Ativar">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                </button>
-                <button *ngIf="user.id !== currentUserId" class="action-btn warning" (click)="openResetModal(user)" title="Resetar Senha">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                </button>
-                <button *ngIf="user.id !== currentUserId" class="action-btn edit" (click)="openEdit(user)" title="Editar">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                </button>
-                <button class="action-btn details" (click)="openDetails(user)" title="Detalhes">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                </button>
-                <button *ngIf="user.id !== currentUserId" class="action-btn delete" (click)="confirmDelete(user)" title="Excluir">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="users.length === 0 && !isLoading">
-            <td colspan="5" class="empty-state">Nenhum usuário encontrado.</td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Corpo do Card -->
+        <div class="user-card-body">
+          <div class="info-row" [title]="user.email">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <span class="text-truncate">{{ user.email }}</span>
+          </div>
+          <div class="info-row">
+            <span class="badge status" [class.active]="user.active" [class.inactive]="!user.active">
+              <span class="dot" *ngIf="user.active"></span>
+              {{ user.active ? 'Ativo' : 'Inativo' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Rodapé do Card (Ações) -->
+        <div class="user-card-footer">
+          <div class="action-buttons">
+            <button *ngIf="user.id !== currentUserId && !user.active" class="action-btn success" (click)="toggleActive(user)" title="Ativar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </button>
+            <button *ngIf="user.id !== currentUserId" class="action-btn warning" (click)="openResetModal(user)" title="Resetar Senha">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </button>
+            <button *ngIf="user.id !== currentUserId" class="action-btn edit" (click)="openEdit(user)" title="Editar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </button>
+            <button class="action-btn details" (click)="openDetails(user)" title="Detalhes">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </button>
+            <button *ngIf="user.id !== currentUserId" class="action-btn delete" (click)="confirmDelete(user)" title="Excluir">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="pagination-controls" *ngIf="users.length > 0">
+    <!-- Empty State -->
+    <div class="empty-state-card" *ngIf="users.length === 0 && !isLoading">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+      <p>Nenhum usuário encontrado.</p>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination-controls" *ngIf="users.length > 0 && totalPages > 1">
       <button class="page-btn prev" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
@@ -78,6 +87,7 @@
     </div>
   </div>
 
+  <!-- MODAIS -->
   <div class="modal-overlay" *ngIf="showFormModal">
     <div class="modal-card fade-in-up">
       <div class="modal-header">
@@ -123,7 +133,7 @@
             </div>
           </div>
 
-          </div>
+        </div>
         <div class="modal-footer">
           <button type="button" class="btn-ghost" (click)="closeModals()">Cancelar</button>
           <button type="submit" class="btn-primary rounded-pill" [disabled]="isLoading">
@@ -172,7 +182,11 @@
         </div>
         <div class="modal-body details-body">
           <div class="user-profile-header">
-            <div class="avatar-large">{{ selectedUser.name.charAt(0) }}</div>
+            @if (selectedUser.photoUrl) {
+              <img [src]="selectedUser.photoUrl" [alt]="selectedUser.name" class="avatar-photo-lg">
+            } @else {
+              <div class="avatar-large">{{ selectedUser.name.charAt(0) }}</div>
+            }
             <div class="text-content">
               <h3>{{ selectedUser.name }}</h3>
               <span class="badge role" [ngClass]="selectedUser.role.toLowerCase()">{{ selectedUser.role }}</span>

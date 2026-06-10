@@ -8,6 +8,8 @@ export interface Professional {
   email: string;
   role: 'DEV' | 'ADMIN' | 'STAFF' | string;
   active: boolean;
+  photoUrl?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface IntervalDTO {
@@ -46,7 +48,7 @@ export interface BlockRequest {
 })
 export class AvailabilityService {
 
-  private readonly baseUrl = 'http://localhost:8080';
+  private readonly baseUrl = 'https://api.falcaobarbearia.com.br';
   private readonly apiUrl = `${this.baseUrl}/api/availability`;
 
   constructor(private http: HttpClient) {}

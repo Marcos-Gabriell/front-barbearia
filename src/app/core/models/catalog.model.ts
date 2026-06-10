@@ -18,6 +18,8 @@ export interface UserSummary {
   name: string;
   email?: string;
   role?: string;
+  photoUrl?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface ApiResponse<T> {

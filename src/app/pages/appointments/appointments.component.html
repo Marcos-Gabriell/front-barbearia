@@ -13,27 +13,45 @@
     </button>
   </header>
 
-  <!-- FILTROS -->
-  <div class="filters-bar animate-up">
-    <div class="filter-search">
-      <lucide-icon [name]="icons.Search" [strokeWidth]="2" class="field-icon"></lucide-icon>
-      <input type="text" class="fi" placeholder="Cliente ou código..." [formControl]="form.controls.q" />
+  <!-- FILTROS MELHORADOS -->
+  <div class="filters-wrap animate-up">
+
+    <!-- Pills de período -->
+    <div class="period-pills">
+      <button *ngFor="let p of periods" class="period-pill"
+        [class.active]="activePeriod() === p.value"
+        (click)="setPeriod(p.value)">{{ p.label }}</button>
     </div>
 
-    <select class="fi" [formControl]="form.controls.status">
-      <option value="">Todos os Status</option>
-      <option value="PENDING">Pendente</option>
-      <option value="CONFIRMED">Confirmado</option>
-      <option value="CANCELLED">Cancelado</option>
-      <option value="NO_SHOW">No-Show</option>
-    </select>
+    <!-- Linha de filtros -->
+    <div class="filters-row">
+      <div class="filter-search">
+        <lucide-icon [name]="icons.Search" [strokeWidth]="2" class="field-icon"></lucide-icon>
+        <input type="text" class="search-input" placeholder="Buscar cliente ou código..."
+          [formControl]="form.controls.q" />
+        <button class="search-clear" *ngIf="form.controls.q.value" (click)="form.controls.q.setValue('')">
+          <lucide-icon [name]="icons.X" [size]="12"></lucide-icon>
+        </button>
+      </div>
 
-    <input type="date" class="fi fi-date" [formControl]="form.controls.dateFrom" />
-    <input type="date" class="fi fi-date" [formControl]="form.controls.dateTo" />
+      <select class="fi-select" [formControl]="form.controls.status">
+        <option value="">Todos os status</option>
+        <option value="PENDING">Pendente</option>
+        <option value="CONFIRMED">Confirmado</option>
+        <option value="CANCELLED">Cancelado</option>
+        <option value="NO_SHOW">No-show</option>
+      </select>
 
-    <button class="btn-clear" *ngIf="hasActiveFilters()" (click)="clearFilters()" title="Limpar filtros">
-      <lucide-icon [name]="icons.X" [strokeWidth]="2.5"></lucide-icon>
-    </button>
+      <div class="date-range">
+        <input type="date" class="fi-date" [formControl]="form.controls.dateFrom" title="De" />
+        <span class="date-sep">→</span>
+        <input type="date" class="fi-date" [formControl]="form.controls.dateTo" title="Até" />
+      </div>
+
+      <button class="btn-clear" *ngIf="hasActiveFilters()" (click)="clearFilters()" title="Limpar">
+        <lucide-icon [name]="icons.X" [strokeWidth]="2.5"></lucide-icon>
+      </button>
+    </div>
   </div>
 
   <!-- LOADING -->
@@ -47,8 +65,8 @@
     <div class="empty-icon">
       <lucide-icon [name]="icons.CalendarX2" [strokeWidth]="1.5"></lucide-icon>
     </div>
-    <h3>Nenhum agendamento</h3>
-    <p>Ajuste os filtros ou crie um novo.</p>
+    <h3>Nenhum agendamento encontrado</h3>
+    <p>Crie um novo agendamento para começar.</p>
   </div>
 
   <!-- GRID -->
@@ -69,17 +87,19 @@
 
       <div class="card-body">
         <h3 class="service">{{ a.serviceName }}</h3>
-        <div class="info-line">
-          <span class="ico blue"><lucide-icon [name]="icons.User" [strokeWidth]="2"></lucide-icon></span>
-          <span class="txt">{{ a.clientName }}</span>
+        <div class="info-row-2">
+          <div class="info-line">
+            <span class="ico blue"><lucide-icon [name]="icons.User" [strokeWidth]="2"></lucide-icon></span>
+            <span class="txt">{{ a.clientName }}</span>
+          </div>
+          <div class="info-line">
+            <span class="ico green"><lucide-icon [name]="icons.UserCheck" [strokeWidth]="2"></lucide-icon></span>
+            <span class="txt">{{ a.professionalName }}</span>
+          </div>
         </div>
         <div class="info-line">
           <span class="ico orange"><lucide-icon [name]="icons.CalendarDays" [strokeWidth]="2"></lucide-icon></span>
-          <span class="txt">{{ a.startAt | date:'dd/MM/yyyy' }} às {{ a.startAt | date:'HH:mm' }}</span>
-        </div>
-        <div class="info-line">
-          <span class="ico green"><lucide-icon [name]="icons.UserCheck" [strokeWidth]="2"></lucide-icon></span>
-          <span class="txt">{{ a.professionalName }}</span>
+          <span class="txt">{{ a.startAt | date:'dd/MM/yyyy':'America/Sao_Paulo' }} às {{ a.startAt | date:'HH:mm':'America/Sao_Paulo' }}</span>
         </div>
       </div>
 
@@ -173,7 +193,26 @@
           <span class="field-icon green"><lucide-icon [name]="icons.Phone" [strokeWidth]="2"></lucide-icon></span>
           <div class="field-info">
             <span class="label">Telefone</span>
-            <span class="value">{{ formatPhone(selectedAppointment()?.clientPhone) }}</span>
+            <span class="value">
+              {{ formatPhone(selectedAppointment()?.clientPhone) }}
+              <button class="btn-copy" (click)="copyToClipboard(selectedAppointment()?.clientPhone, 'phone')" title="Copiar telefone">
+                <lucide-icon *ngIf="copiedField() !== 'phone'" [name]="icons.Copy" [size]="13" [strokeWidth]="2"></lucide-icon>
+                <lucide-icon *ngIf="copiedField() === 'phone'" [name]="icons.Check" [size]="13" [strokeWidth]="2.5" class="copied"></lucide-icon>
+              </button>
+            </span>
+          </div>
+        </div>
+        <div class="field-row" *ngIf="selectedAppointment()?.clientEmail">
+          <span class="field-icon blue"><lucide-icon [name]="icons.Mail" [strokeWidth]="2"></lucide-icon></span>
+          <div class="field-info">
+            <span class="label">E-mail</span>
+            <span class="value">
+              {{ selectedAppointment()?.clientEmail }}
+              <button class="btn-copy" (click)="copyToClipboard(selectedAppointment()?.clientEmail, 'email')" title="Copiar e-mail">
+                <lucide-icon *ngIf="copiedField() !== 'email'" [name]="icons.Copy" [size]="13" [strokeWidth]="2"></lucide-icon>
+                <lucide-icon *ngIf="copiedField() === 'email'" [name]="icons.Check" [size]="13" [strokeWidth]="2.5" class="copied"></lucide-icon>
+              </button>
+            </span>
           </div>
         </div>
         <div class="field-row">
@@ -181,9 +220,9 @@
           <div class="field-info">
             <span class="label">Data / Horário</span>
             <span class="value">
-              {{ selectedAppointment()?.startAt | date:'dd/MM/yyyy' }} ·
-              {{ selectedAppointment()?.startAt | date:'HH:mm' }} -
-              {{ selectedAppointment()?.endAt | date:'HH:mm' }}
+              {{ selectedAppointment()?.startAt | date:'dd/MM/yyyy':'America/Sao_Paulo' }} ·
+              {{ selectedAppointment()?.startAt | date:'HH:mm':'America/Sao_Paulo' }} -
+              {{ selectedAppointment()?.endAt | date:'HH:mm':'America/Sao_Paulo' }}
             </span>
           </div>
         </div>
@@ -199,7 +238,7 @@
           <div class="field-info">
             <span class="label">Criado em</span>
             <span class="value">
-              {{ selectedAppointment()?.createdAt | date:'dd/MM/yyyy' }} às {{ selectedAppointment()?.createdAt | date:'HH:mm' }}
+              {{ selectedAppointment()?.createdAt | date:'dd/MM/yyyy':'America/Sao_Paulo' }} às {{ selectedAppointment()?.createdAt | date:'HH:mm':'America/Sao_Paulo' }}
               <span class="origin-chip">{{ getCreatedByLabel(selectedAppointment()) }}</span>
             </span>
           </div>
@@ -208,7 +247,7 @@
           <span class="field-icon confirmed-color"><lucide-icon [name]="icons.CheckCircle" [strokeWidth]="2"></lucide-icon></span>
           <div class="field-info">
             <span class="label">Chegada confirmada em</span>
-            <span class="value">{{ selectedAppointment()?.confirmedAt | date:'dd/MM/yyyy' }} às {{ selectedAppointment()?.confirmedAt | date:'HH:mm' }}</span>
+            <span class="value">{{ selectedAppointment()?.confirmedAt | date:'dd/MM/yyyy':'America/Sao_Paulo' }} às {{ selectedAppointment()?.confirmedAt | date:'HH:mm':'America/Sao_Paulo' }}</span>
           </div>
         </div>
       </div>
@@ -222,7 +261,7 @@
           <div class="audit-row" *ngIf="selectedAppointment()?.canceledAt">
             <span class="a-label">Cancelado em</span>
             <span class="a-value">
-              {{ selectedAppointment()?.canceledAt | date:'dd/MM/yyyy' }} às {{ selectedAppointment()?.canceledAt | date:'HH:mm' }}
+              {{ selectedAppointment()?.canceledAt | date:'dd/MM/yyyy':'America/Sao_Paulo' }} às {{ selectedAppointment()?.canceledAt | date:'HH:mm':'America/Sao_Paulo' }}
             </span>
           </div>
           <div class="audit-row">
@@ -378,7 +417,11 @@
                  [style.animation-delay.ms]="i * 30"
                  [class.selected]="newAppointmentForm.get('professionalUserId')?.value === p.id"
                  (click)="selectProfessional(p.id)">
-              <span class="avatar">{{ p.name.charAt(0) }}</span>
+              @if (p.photoUrl || p.avatarUrl) {
+                <img [src]="(p.photoUrl || p.avatarUrl)!" [alt]="p.name" class="avatar avatar-img">
+              } @else {
+                <span class="avatar">{{ p.name.charAt(0) }}</span>
+              }
               <span class="opt-name flex-1">{{ p.name }}</span>
               <span class="opt-check" *ngIf="newAppointmentForm.get('professionalUserId')?.value === p.id">
                 <lucide-icon [name]="icons.CheckCircle" [strokeWidth]="2"></lucide-icon>
@@ -497,7 +540,7 @@
               </div>
               <div class="summary-item">
                 <span class="s-label">Data</span>
-                <span class="s-value">{{ newAppointmentForm.get('date')?.value | date:'dd/MM/yyyy' }}</span>
+                <span class="s-value">{{ newAppointmentForm.get('date')?.value | date:'dd/MM/yyyy':'America/Sao_Paulo' }}</span>
               </div>
               <div class="summary-item">
                 <span class="s-label">Horário</span>
@@ -548,7 +591,7 @@
         <span class="code-tag lg">{{ appointmentToCancel()?.code || '#' + appointmentToCancel()?.id }}</span>
         <h4>{{ appointmentToCancel()?.serviceName }}</h4>
         <p>{{ appointmentToCancel()?.clientName }}</p>
-        <p>{{ appointmentToCancel()?.startAt | date:"dd/MM/yyyy 'às' HH:mm" }}</p>
+        <p>{{ appointmentToCancel()?.startAt | date:"dd/MM/yyyy 'às' HH:mm":'America/Sao_Paulo' }}</p>
       </div>
       <div class="form-field">
         <label>Motivo (opcional)</label>
@@ -566,28 +609,29 @@
   </div>
 </div>
 
-<!-- ================================================
-     MODAL: SUCESSO
-     ================================================ -->
 <div class="modal-overlay" *ngIf="showSuccessModal()">
-  <div class="modal-card modal-xs fade-in-up">
-    <div class="modal-body center">
-      <div class="success-icon-wrap">
-        <lucide-icon [name]="icons.Check" [strokeWidth]="3"></lucide-icon>
+  <div class="modal-card small-modal fade-in-up">
+    <div class="modal-body text-center" style="padding-top: 30px; padding-bottom: 30px;">
+      <div class="success-checkmark-anim">
+        <div class="check-icon">
+          <span class="icon-line line-tip"></span>
+          <span class="icon-line line-long"></span>
+          <div class="icon-circle"></div>
+          <div class="icon-fix"></div>
+        </div>
       </div>
-      <h3 class="success-title">{{ successTitle() }}</h3>
-      <p class="success-msg">{{ successMessage() }}</p>
-      <button class="btn-download full"
-              *ngIf="successAppt"
-              (click)="downloadReceipt(successAppt!, true)"
-              [disabled]="isDownloadingPdf()">
+      <h3 style="margin-top: 16px; color: var(--text-main);">{{ successTitle() }}</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px; line-height: 1.5;">{{ successMessage() }}</p>
+      <button class="btn-download full" *ngIf="successAppt"
+              (click)="downloadReceipt(successAppt!, true)" [disabled]="isDownloadingPdf()"
+              style="margin-top: 16px;">
         <div *ngIf="isDownloadingPdf()" class="spinner-xs"></div>
         <lucide-icon *ngIf="!isDownloadingPdf()" [name]="icons.FileDown" [strokeWidth]="2"></lucide-icon>
         <span>{{ isDownloadingPdf() ? 'Gerando PDF...' : 'Baixar Comprovante' }}</span>
       </button>
-      <button class="btn-primary full" [style.margin-top.px]="successAppt ? 8 : 0" (click)="closeSuccessModal()">
-        Entendido
-      </button>
+      <div class="action-buttons-center" style="margin-top: 16px;">
+        <button class="btn-primary rounded-pill full-width" (click)="closeSuccessModal()">OK, Entendi</button>
+      </div>
     </div>
   </div>
 </div>

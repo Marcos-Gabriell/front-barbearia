@@ -17,7 +17,7 @@
       @if (!loading() && !error()) {
         <div class="header-sub">
           <span class="sub-title">Agendas disponíveis</span>
-          <span class="sub-pill">{{ professionals().length }} usuário(s)</span>
+          <span class="sub-pill">{{ filteredProfessionals().length }} usuário(s)</span>
         </div>
       }
     </div>
@@ -71,75 +71,105 @@
   }
 
   @if (!loading() && !error() && professionals().length > 0) {
-    <div class="cards-grid">
-      @for (p of professionalsPaginated(); track p.id) {
-        <div class="person-card stagger-in" [class.inactive]="!p.active">
-
-          <div class="person-top">
-            <div class="avatar-circle">{{ getInitials(p.name) }}</div>
-
-            <div class="person-meta">
-              <div class="name-line">
-                <strong class="text-truncate-header" [title]="p.name">{{ p.name }}</strong>
-
-                <span class="badge role" [ngClass]="p.role?.toLowerCase()">
-                  {{ getRoleLabel(p.role) }}
-                </span>
-              </div>
-
-              <div class="email-line" [title]="p.email">
-                <i class="bi bi-envelope"></i>
-                <span class="text-truncate">{{ p.email }}</span>
-              </div>
-            </div>
-
-            <span class="status-dot" [class.on]="p.active" [class.off]="!p.active"></span>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="person-actions">
-            <button class="btn-primary rounded-pill"
-                    (click)="viewSchedule(p)"
-                    [disabled]="!p.active">
-              <i class="bi bi-calendar-check"></i>
-              Abrir Agenda
-            </button>
-          </div>
-
-        </div>
-      }
+    
+    <div class="search-container slide-down">
+      <div class="search-box">
+        <lucide-icon [name]="icons.Search" class="search-icon"></lucide-icon>
+        <input type="text" 
+               placeholder="Buscar por nome ou e-mail..." 
+               [value]="searchTerm()" 
+               (input)="onSearch($event)">
+        
+        @if (searchTerm()) {
+          <button class="clear-search-btn" (click)="clearSearch()" title="Limpar busca">
+            <lucide-icon [name]="icons.X"></lucide-icon>
+          </button>
+        }
+      </div>
     </div>
 
-    <div class="pagination" *ngIf="totalPages() > 1">
-      <button class="pagination-btn" 
-              (click)="prevPage()" 
-              [disabled]="!hasPrevPage()"
-              title="Página anterior">
-        <i class="bi bi-chevron-left"></i>
-      </button>
+    @if (filteredProfessionals().length === 0) {
+      <div class="empty-card card fade-in" style="padding: 40px 20px;">
+        <div class="empty-icon" style="background: transparent;">
+          <lucide-icon [name]="icons.Search" [size]="40" style="color: var(--text-muted); opacity: 0.5;"></lucide-icon>
+        </div>
+        <h3>Nenhum profissional encontrado</h3>
+        <p>Não encontramos ninguém com o termo "<strong>{{ searchTerm() }}</strong>".</p>
+        <button class="btn-ghost" (click)="clearSearch()" style="margin-top: 10px;">Limpar pesquisa</button>
+      </div>
+    } @else {
+      <div class="cards-grid">
+        @for (p of professionalsPaginated(); track p.id) {
+          <div class="person-card stagger-in" [class.inactive]="!p.active">
 
-      <div class="pagination-numbers">
-        @for (page of getPageNumbers(); track page) {
-          @if (page === -1) {
-            <span class="pagination-dots">...</span>
-          } @else {
-            <button class="pagination-number" 
-                    [class.active]="currentPage() === page"
-                    (click)="goToPage(page)">
-              {{ page }}
-            </button>
-          }
+            <div class="person-top">
+              @if (p.photoUrl || p.avatarUrl) {
+                <img [src]="(p.photoUrl || p.avatarUrl)!" [alt]="p.name" class="avatar-circle avatar-circle-img">
+              } @else {
+                <div class="avatar-circle">{{ getInitials(p.name) }}</div>
+              }
+
+              <div class="person-meta">
+                <div class="name-line">
+                  <strong class="text-truncate-header" [title]="p.name">{{ p.name }}</strong>
+                  <span class="badge role" [ngClass]="p.role.toLowerCase()">
+                    {{ getRoleLabel(p.role) }}
+                  </span>
+                </div>
+                <div class="email-line" [title]="p.email">
+                  <i class="bi bi-envelope"></i>
+                  <span class="text-truncate">{{ p.email }}</span>
+                </div>
+              </div>
+
+              <span class="status-dot" [class.on]="p.active" [class.off]="!p.active"></span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="person-actions">
+              <button class="btn-primary rounded-pill"
+                      (click)="viewSchedule(p)"
+                      [disabled]="!p.active">
+                <i class="bi bi-calendar-check"></i>
+                Abrir Agenda
+              </button>
+            </div>
+
+          </div>
         }
       </div>
 
-      <button class="pagination-btn" 
-              (click)="nextPage()" 
-              [disabled]="!hasNextPage()"
-              title="Próxima página">
-        <i class="bi bi-chevron-right"></i>
-      </button>
-    </div>
+      <div class="pagination" *ngIf="totalPages() > 1">
+        <button class="pagination-btn" 
+                (click)="prevPage()" 
+                [disabled]="!hasPrevPage()"
+                title="Página anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <div class="pagination-numbers">
+          @for (page of getPageNumbers(); track page) {
+            @if (page === -1) {
+              <span class="pagination-dots">...</span>
+            } @else {
+              <button class="pagination-number" 
+                      [class.active]="currentPage() === page"
+                      (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            }
+          }
+        </div>
+
+        <button class="pagination-btn" 
+                (click)="nextPage()" 
+                [disabled]="!hasNextPage()"
+                title="Próxima página">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    }
   }
 
   <div class="modal-overlay modal-schedule-overlay" *ngIf="scheduleModalOpen()">
@@ -238,8 +268,8 @@
               <div class="col right">
                 <button class="btn-icon-add"
                         (click)="addBreak(day)"
-                        [disabled]="!day.active || (day.breaks?.length || 0) >= 3"
-                        [title]="(day.breaks?.length || 0) >= 3 ? 'Máximo de 3 pausas' : 'Adicionar pausa'">
+                        [disabled]="!day.active || (day.breaks.length || 0) >= 3"
+                        [title]="(day.breaks.length || 0) >= 3 ? 'Máximo de 3 pausas' : 'Adicionar pausa'">
                   <lucide-icon [name]="icons.Plus"></lucide-icon>
                 </button>
               </div>
@@ -290,9 +320,8 @@
   </div>
 
   <div class="modal-overlay" *ngIf="showSuccessModal()">
-    <div class="modal-card fade-in-up" style="max-width: 340px;">
-      <div class="modal-body text-center" style="padding: 30px 24px; text-align: center;">
-
+    <div class="modal-card small-modal fade-in-up">
+      <div class="modal-body text-center" style="padding-top: 30px; padding-bottom: 30px;">
         <div class="success-checkmark-anim">
           <div class="check-icon">
             <span class="icon-line line-tip"></span>
@@ -301,19 +330,11 @@
             <div class="icon-fix"></div>
           </div>
         </div>
-
-        <h3 style="margin: 20px 0 8px 0; color: var(--text-main); font-size: 20px; font-weight: 700;">
-          {{ successTitle() }}
-        </h3>
-
-        <p style="color: var(--text-muted); font-size: 14px; margin: 0 0 24px 0; line-height: 1.5;">
-          {{ successMessage() }}
-        </p>
-
-        <button class="btn-primary rounded-pill" style="width: 100%; justify-content: center;" (click)="closeSuccessModal()">
-          OK, Entendi
-        </button>
-
+        <h3 style="margin-top: 16px; color: var(--text-main);">{{ successTitle() }}</h3>
+        <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px; line-height: 1.5;">{{ successMessage() }}</p>
+        <div class="action-buttons-center" style="margin-top: 24px;">
+          <button class="btn-primary rounded-pill full-width" (click)="closeSuccessModal()">OK, Entendi</button>
+        </div>
       </div>
     </div>
   </div>

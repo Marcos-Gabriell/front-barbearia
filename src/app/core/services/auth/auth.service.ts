@@ -42,7 +42,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
 
-  private readonly baseUrl = 'http://localhost:8080/api/auth';
+  private readonly baseUrl = 'https://api.falcaobarbearia.com.br/api/auth';
 
   login(payload: LoginPayload): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.baseUrl}/login`, payload).pipe(

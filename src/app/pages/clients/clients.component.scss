@@ -1,0 +1,277 @@
+// src/app/pages/clients/clients.component.scss
+@use 'sass:color';
+$primary:      var(--primary);
+$text-main:    var(--text-main);
+$text-muted:   var(--text-muted);
+$border-color: var(--border-color);
+$bg-card:      var(--bg-card);
+$bg-body:      var(--bg-body);
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px;
+  @media (max-width: 768px) { padding: 75px 16px 24px; }
+}
+
+.fade-in { animation: fadeIn .3s ease; }
+.animate-up { animation: slideUp .3s ease; }
+.stagger-in { animation: staggerIn .3s ease backwards; }
+.fade-in-up { animation: fadeInUp .3s ease; }
+
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes slideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+@keyframes staggerIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:none} }
+
+/* ── Header ── */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 12px;
+  .header-title h1 { font-size: 24px; font-weight: 800; color: $text-main; margin: 0 0 4px; }
+  .header-title p  { color: $text-muted; font-size: 14px; margin: 0; }
+  @media (max-width: 600px) { flex-direction: column; align-items: flex-start; }
+}
+.header-badge {
+  padding: 6px 12px; background: rgba(16, 185, 129, 0.12); color: #10b981;
+  border-radius: 20px; font-size: 13px; font-weight: 700;
+}
+
+/* ── Busca ── */
+.search-bar { margin-bottom: 24px; }
+.search-input-wrap {
+  position: relative; display: flex; align-items: center; max-width: 500px;
+  @media (max-width: 768px) { max-width: 80%; }
+  .search-icon { position: absolute; left: 14px; color: $text-muted; pointer-events: none; }
+  .search-input {
+    width: 100%; padding: 12px 40px; border-radius: 12px; border: 1px solid $border-color;
+    background: $bg-card; color: $text-main; font-size: 14px; transition: .2s; outline: none;
+    &:focus { border-color: $primary; box-shadow: 0 0 0 3px rgba(16,185,129,.1); }
+  }
+  .search-clear {
+    position: absolute; right: 10px; width: 26px; height: 26px; border-radius: 50%;
+    background: transparent; border: none; color: $text-muted; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    &:hover { background: rgba(0,0,0,0.05); color: #ef4444; }
+  }
+}
+
+/* ── Grid de Clientes ── */
+.clients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    max-width: 80%;
+  }
+}
+
+.client-card {
+  background: $bg-card; border: 1px solid $border-color; border-radius: 16px;
+  padding: 16px; display: flex; flex-direction: column; gap: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  &:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+
+  @media (max-width: 768px) {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+
+  .card-top {
+    display: flex; align-items: center; gap: 14px;
+    @media (max-width: 768px) { gap: 10px; }
+
+    .avatar {
+      width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(16, 185, 129, 0.12); color: #10b981; font-size: 18px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; border: 2px solid #10b981;
+      @media (max-width: 768px) { width: 38px; height: 38px; font-size: 15px; }
+    }
+    .info {
+      flex: 1; overflow: hidden;
+      h3 { font-size: 15px; font-weight: 700; color: $text-main; margin: 0 0 4px; }
+      .info-line {
+        display: flex; align-items: center; gap: 6px; font-size: 12px; color: $text-muted; margin-bottom: 3px;
+        lucide-icon { opacity: 0.7; }
+        @media (max-width: 768px) { font-size: 11px; }
+      }
+      @media (max-width: 768px) {
+        h3 { font-size: 13px; margin-bottom: 2px; }
+        .info-line.email { display: none; }
+      }
+    }
+  }
+
+  .card-stats {
+    display: flex; gap: 10px; padding: 12px; background: $bg-body; border-radius: 10px;
+    @media (max-width: 768px) { padding: 8px 10px; }
+    .stat-box {
+      flex: 1; display: flex; flex-direction: column; gap: 2px;
+      &.right { align-items: flex-end; text-align: right; }
+      .stat-lbl { font-size: 10px; text-transform: uppercase; font-weight: 700; color: $text-muted; }
+      .stat-val { font-size: 14px; font-weight: 600; color: $text-main;
+        @media (max-width: 768px) { font-size: 13px; }
+      }
+    }
+  }
+
+  .card-actions {
+    .btn-history {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px; border-radius: 10px; border: 1px solid $border-color; background: transparent;
+      color: $text-main; font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s;
+      &:hover { border-color: $primary; color: $primary; background: rgba(16, 185, 129, 0.05); }
+      @media (max-width: 768px) { padding: 8px; font-size: 12px; }
+    }
+  }
+}
+
+.text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Paginação ── */
+.pagination, .history-pagination {
+  display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 10px;
+  .pg-info { font-size: 13px; font-weight: 600; color: $text-muted; }
+}
+.pg-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid $border-color;
+  background: $bg-card; color: $text-main; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: .2s;
+  &:hover:not(:disabled) { border-color: $primary; color: $primary; }
+  &:disabled { opacity: 0.3; cursor: not-allowed; }
+  &.sm { width: 30px; height: 30px; border-radius: 6px; }
+}
+
+/* ── Modais ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px;
+  @media (max-width: 600px) { padding: 0; align-items: flex-end; }
+}
+.modal-card {
+  background: $bg-card; border-radius: 20px; width: 100%; max-width: 600px;
+  max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  
+  /* 100% no mobile */
+  @media (max-width: 600px) { 
+    border-radius: 0; 
+    max-height: 100dvh; 
+    height: 100dvh;
+    max-width: 100vw; 
+  }
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid $border-color;
+  .modal-title-stack { h2 { font-size: 18px; font-weight: 700; margin: 0; color: $text-main; } p { font-size: 13px; color: $text-muted; margin: 2px 0 0; } }
+}
+.btn-close-circle {
+  width: 32px; height: 32px; border-radius: 50%; border: none; background: $bg-body; color: $text-muted;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .2s;
+  &:hover { background: #fee2e2; color: #ef4444; }
+}
+
+/* ── Dados do Cliente no Modal ── */
+.modal-client-info {
+  display: flex; align-items: center; gap: 16px; padding: 20px 24px;
+  background: $bg-body; border-bottom: 1px solid $border-color;
+
+  @media (max-width: 600px) {
+    flex-direction: column; align-items: flex-start; padding: 16px; gap: 12px;
+  }
+
+  .avatar-lg {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(16, 185, 129, 0.12); color: #10b981;
+    font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    border: 2px solid #10b981; flex-shrink: 0;
+  }
+
+  .info-lg {
+    flex: 1;
+    h3 { font-size: 18px; font-weight: 700; color: $text-main; margin: 0 0 8px; }
+  }
+
+  .contact-badges {
+    display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; padding: 4px 8px; border-radius: 6px;
+      background: $bg-card; border: 1px solid $border-color; color: $text-muted;
+    }
+  }
+
+  .stats-row {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    .s-item {
+      display: flex; flex-direction: column;
+      span { font-size: 10px; text-transform: uppercase; font-weight: 700; color: $text-muted; }
+      b { font-size: 13px; font-weight: 600; color: $text-main; }
+    }
+  }
+}
+
+/* ── Filtros do Modal (Pills quebrando a linha) ── */
+.history-filters {
+  display: flex; gap: 6px; padding: 16px 24px 0; 
+  flex-wrap: wrap; /* Agora as pílulas caem para a linha de baixo se não couberem */
+  
+  .filter-pill {
+    padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 20px;
+    border: 1px solid $border-color; background: $bg-body; color: $text-muted; cursor: pointer;
+    transition: .2s; white-space: nowrap; flex-shrink: 0;
+    &:hover:not(.active) { background: color.adjust(#f1f5f9, $lightness: -5%); .dark-theme & { background: #27272a; } }
+    
+    &.active { background: $primary; color: #fff; border-color: $primary; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
+    &.confirmed.active { background: #16a34a; border-color: #16a34a; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3); }
+    &.pending.active   { background: #d97706; border-color: #d97706; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3); }
+    &.cancelled.active { background: #ef4444; border-color: #ef4444; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
+    &.noshow.active    { background: #475569; border-color: #475569; box-shadow: 0 4px 10px rgba(71, 85, 105, 0.3); }
+  }
+}
+
+.modal-body { padding: 16px 24px; overflow-y: auto; flex: 1; }
+
+.history-list { display: flex; flex-direction: column; }
+.history-item {
+  display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid $border-color;
+  &:last-child { border-bottom: none; }
+  &__date {
+    display: flex; flex-direction: column; align-items: center; min-width: 44px;
+    b { font-size: 14px; font-weight: 700; color: $text-main; }
+    span { font-size: 11px; color: $text-muted; }
+  }
+  &__body {
+    flex: 1; display: flex; flex-direction: column; gap: 2px;
+    .history-item__service { font-size: 14px; font-weight: 700; color: $text-main; }
+    .history-item__prof { font-size: 12px; color: $text-muted; }
+  }
+}
+
+.status-pill {
+  font-size: 10px; text-transform: uppercase; padding: 4px 8px; border-radius: 8px; font-weight: 700; flex-shrink: 0;
+  &--confirmed { background: rgba(22, 163, 74, 0.1); color: #16a34a; }
+  &--pending   { background: rgba(217, 119, 6, 0.1); color: #d97706; }
+  &--cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+  &--noshow    { background: rgba(71, 85, 105, 0.1); color: #475569; }
+}
+
+.modal-footer {
+  display: flex; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid $border-color;
+  @media (max-width: 600px) { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+
+.btn-ghost {
+  background: transparent; color: $text-muted; border: 1px solid $border-color;
+  padding: 10px 20px; font-weight: 600; cursor: pointer; border-radius: 10px; font-size: 13px; transition: .2s;
+  &:hover { background: $bg-body; color: $text-main; }
+}
+
+/* Loading & Empty States */
+.loading-state { display: flex; flex-direction: column; align-items: center; padding: 40px; color: $text-muted; font-size: 14px; gap: 10px; }
+.spinner { width: 24px; height: 24px; border: 2px solid $border-color; border-top-color: $primary; border-radius: 50%; animation: spin .6s linear infinite; }
+
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 60px 20px; text-align: center; background: $bg-card; border-radius: 16px; border: 1px dashed $border-color; h3 { font-size: 16px; color: $text-main; margin: 0 0 4px; } p { font-size: 14px; color: $text-muted; margin: 0; } }
+.empty-state--sm { padding: 40px 20px; background: $bg-body; border: none; span { color: $text-muted; font-size: 13px; font-weight: 500; } }

@@ -1,3 +1,4 @@
+// src/app/app.routes.ts
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -23,13 +24,6 @@ export const routes: Routes = [
       import('./pages/auth/setup-account.component').then(m => m.SetupAccountComponent),
   },
 
-
-  {
-    path: 'cancelar-agendamento',
-    loadComponent: () =>
-      import('./pages/appointments/cancel/cancel-appointment.component').then(m => m.CancelAppointmentComponent),
-  },
-
   {
     path: 'agendamentos',
     canActivate: [authGuard],
@@ -52,6 +46,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'clientes',
+    canActivate: [authGuard, roleGuard(['DEV', 'ADMIN'])],
+    loadComponent: () =>
+      import('./pages/clients/clients.component').then(m => m.ClientsComponent),
+  },
+
+  {
     path: 'usuarios',
     canActivate: [authGuard, roleGuard(['DEV', 'ADMIN'])],
     loadComponent: () =>
@@ -63,6 +64,14 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard(['DEV', 'ADMIN'])],
     loadComponent: () =>
       import('./pages/availability/availability.component').then(m => m.AvailabilityComponent),
+  },
+
+  // ── NOVO: Financeiro ─────────────────────────────────────────────────────
+  {
+    path: 'financeiro',
+    canActivate: [authGuard, roleGuard(['DEV', 'ADMIN'])],
+    loadComponent: () =>
+      import('./pages/financeiro/financeiro.component').then(m => m.FinanceiroComponent),
   },
 
   {

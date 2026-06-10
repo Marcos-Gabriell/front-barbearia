@@ -20,6 +20,20 @@ export interface CreateInternalAppointmentRequest {
   startAt: string;
 }
 
+/** Multi-serviço: corte + barba em sequência */
+export interface CreateMultiServiceAppointmentRequest {
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  professionalUserId: number;
+  serviceIds: number[];   // 2-5 serviços, na ordem desejada
+  startAt: string;
+}
+
+export interface RescheduleRequest {
+  newStartAt: string;   // ISO datetime
+}
+
 export interface CancelAppointmentRequest {
   message: string | null;
 }
@@ -27,6 +41,8 @@ export interface CancelAppointmentRequest {
 export interface ProfessionalSimple {
   id: number;
   name: string;
+  photoUrl?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface AvailableSlot {
@@ -47,10 +63,9 @@ export interface ServiceSimple {
 @Injectable({ providedIn: 'root' })
 export class AppointmentsService {
 
-  // URLs diretas — sem environment
-  private readonly adminUrl  = 'http://localhost:8080/api/appointments';
-  private readonly catalogUrl= 'http://localhost:8080/api/admin/services';
-  private readonly publicUrl = 'http://localhost:8080/public/appointments';
+  private readonly adminUrl  = 'https://api.falcaobarbearia.com.br/api/appointments';
+  private readonly catalogUrl= 'https://api.falcaobarbearia.com.br/api/admin/services';
+  private readonly publicUrl = 'https://api.falcaobarbearia.com.br/public/appointments';
 
   constructor(private http: HttpClient) {}
 
@@ -58,13 +73,10 @@ export class AppointmentsService {
 
   list(filter: AppointmentFilter): Observable<PageResponse<Appointment>> {
     let params = new HttpParams();
-
     const add = (key: string, value: any) => {
-      if (value !== null && value !== undefined && value !== '') {
+      if (value !== null && value !== undefined && value !== '')
         params = params.set(key, String(value));
-      }
     };
-
     add('q',                  filter.q);
     add('status',             filter.status);
     add('dateFrom',           filter.dateFrom);
@@ -74,7 +86,6 @@ export class AppointmentsService {
     add('page',               filter.page);
     add('size',               filter.size);
     add('sort',               filter.sort);
-
     return this.http.get<PageResponse<Appointment>>(this.adminUrl, { params });
   }
 
@@ -86,6 +97,16 @@ export class AppointmentsService {
 
   createInternal(payload: CreateInternalAppointmentRequest): Observable<Appointment> {
     return this.http.post<Appointment>(this.adminUrl, payload);
+  }
+
+  /** Agendamento multi-serviço (corte + barba em sequência) */
+  createMulti(payload: CreateMultiServiceAppointmentRequest): Observable<Appointment[]> {
+    return this.http.post<Appointment[]>(`${this.adminUrl}/multi`, payload);
+  }
+
+  /** Reagendamento — altera o horário mantendo código e histórico */
+  reschedule(id: number, payload: RescheduleRequest): Observable<Appointment> {
+    return this.http.patch<Appointment>(`${this.adminUrl}/${id}/reschedule`, payload);
   }
 
   cancelInternal(id: number, payload: CancelAppointmentRequest): Observable<void> {
@@ -102,18 +123,10 @@ export class AppointmentsService {
 
   // ── PDF ──────────────────────────────────────────────────────────────────
 
-  /**
-   * GET /api/appointments/{id}/pdf
-   * Retorna o Blob — o componente cuida do download.
-   */
   downloadReceipt(id: number): Observable<Blob> {
     return this.http.get(`${this.adminUrl}/${id}/pdf`, { responseType: 'blob' });
   }
 
-  /**
-   * GET /api/appointments/{id}/pdf/view
-   * Retorna o Blob para visualização inline.
-   */
   viewReceiptInline(id: number): Observable<Blob> {
     return this.http.get(`${this.adminUrl}/${id}/pdf/view`, { responseType: 'blob' });
   }
@@ -121,13 +134,8 @@ export class AppointmentsService {
   // ── Catálogo ──────────────────────────────────────────────────────────────
 
   private extractResponsibles(item: any): ProfessionalSimple[] {
-    const raw =
-      item?.responsibleUsers ??
-      item?.responsiblesUsers ??
-      item?.responsibles ??
-      item?.responsibleUserIds ??
-      [];
-
+    const raw = item?.responsibleUsers ?? item?.responsiblesUsers ??
+                item?.responsibles ?? item?.responsibleUserIds ?? [];
     if (!Array.isArray(raw)) return [];
     return raw
       .filter((r: any) => r && typeof r === 'object')
@@ -150,10 +158,7 @@ export class AppointmentsService {
           }))
           .filter((s: ServiceSimple) => !!s.id && !!s.name);
       }),
-      catchError(err => {
-        console.error('ERRO AO BUSCAR CATALOG:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 
@@ -187,7 +192,6 @@ export class AppointmentsService {
       .set('serviceId',      serviceId.toString())
       .set('professionalId', professionalId.toString())
       .set('date',           date);
-
     return this.http
       .get<AvailableSlot[]>(`${this.publicUrl}/slots`, { params })
       .pipe(
@@ -219,5 +223,10 @@ export class AppointmentsService {
   getCancelInfo(token: string): Observable<any> {
     const params = new HttpParams().set('token', token);
     return this.http.get<any>(`${this.publicUrl}/cancel-info`, { params });
+  }
+
+  resendCancelLink(code: string, email: string): Observable<void> {
+    const params = new HttpParams().set('code', code).set('email', email);
+    return this.http.post<void>(`${this.publicUrl}/resend-cancel-link`, null, { params });
   }
 }

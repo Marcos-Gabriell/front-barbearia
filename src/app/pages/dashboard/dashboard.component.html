@@ -1,77 +1,361 @@
-<div class="dashboard-container fade-in">
-  
-  <header class="page-header">
-    <div>
-      <h1>Visão Geral</h1>
-      <p>Resumo de desempenho da barbearia</p>
-    </div>
-    <button class="btn-report">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Baixar Relatório
-    </button>
-  </header>
+<!-- src/app/pages/dashboard/dashboard.component.html -->
+<div class="dash-wrap fade-in">
 
-  <section class="kpi-grid">
-    <div class="kpi-card" *ngFor="let item of kpis" [class]="item.color">
-      <div class="kpi-icon">
-        <ng-container [ngSwitch]="item.icon">
-          <svg *ngSwitchCase="'calendar'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <svg *ngSwitchCase="'users'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <svg *ngSwitchCase="'money'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          <svg *ngSwitchCase="'cancel'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-        </ng-container>
-      </div>
-      <div class="kpi-info">
-        <span class="label">{{ item.title }}</span>
-        <h3 class="value">{{ item.value }}</h3>
-        <span class="change" [class.negative]="item.change.includes('-')">
-          {{ item.change }} <span class="period">vs. mês anterior</span>
-        </span>
-      </div>
+  <!-- Header -->
+  <!-- Header -->
+<header class="dash-header">
+  <div class="dash-header__title">
+    <h1>Dashboard</h1>
+    <p>{{ isAdmin() && dashView() === 'geral' ? 'Visão geral da barbearia' : 'Seus agendamentos' }}</p>
+  </div>
+  <div class="dash-controls">
+    <!-- Essa div só aparece se o cara tiver ROLE DEV, ADMIN ou ADM -->
+    <div class="view-toggle" *ngIf="isAdmin()">
+      <button class="view-btn" [class.active]="dashView() === 'geral'" (click)="setView('geral')">
+        <lucide-icon [name]="icons.LayoutDashboard" [size]="16"></lucide-icon> Visão Geral
+      </button>
+      <button class="view-btn" [class.active]="dashView() === 'minha-agenda'" (click)="setView('minha-agenda')">
+        <lucide-icon [name]="icons.User" [size]="16"></lucide-icon> Minha Agenda
+      </button>
     </div>
-  </section>
-
-  <section class="content-grid">
     
-    <div class="card chart-section">
-      <div class="card-header">
-        <h3>Receita por Período</h3>
-        <select class="period-select">
-          <option>Últimos 7 dias</option>
-          <option>Este Mês</option>
-        </select>
-      </div>
-      <div class="chart-container">
-        <div class="css-chart">
-          <div class="bar" *ngFor="let val of revenueData" [style.height.%]="val"></div>
+    <div class="period-pills" *ngIf="isAdmin() && dashView() === 'geral'">
+      <button *ngFor="let p of periods" class="period-pill"
+        [class.active]="activePeriod() === p.value"
+        (click)="setPeriod(p.value)">{{ p.label }}</button>
+    </div>
+    
+    <div class="date-range">
+      <span class="date-range__label">De</span>
+      <input type="date" class="date-input" [value]="selectedDateFrom()"
+        (change)="onDateFromChange($any($event.target).value)">
+      <span class="date-range__label">Até</span>
+      <input type="date" class="date-input" [value]="selectedDateTo()"
+        (change)="onDateToChange($any($event.target).value)">
+    </div>
+  </div>
+</header>
+
+  <!-- Loading -->
+  <div class="dash-loading" *ngIf="loading()">
+    <div class="spin"></div><span>Carregando...</span>
+  </div>
+
+  <!-- VISÃO GERAL -->
+  <ng-container *ngIf="!loading() && isAdmin() && dashView() === 'geral' && adminData() as d">
+
+    <!-- KPIs -->
+    <section class="kpi-row">
+      <div class="kpi kpi--blue">
+        <div class="kpi__icon-wrap kpi__icon-wrap--blue">
+          <lucide-icon [name]="icons.CalendarDays" [size]="20"></lucide-icon>
         </div>
-        <div class="chart-labels">
-          <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+        <div class="kpi__body">
+          <span class="kpi__label">Agendamentos</span>
+          <b class="kpi__val">{{ d.todayTotal }}</b>
+          <span class="kpi__sub">
+            <span class="dot dot--amber"></span>{{ d.todayPending }} pend.
+            <span class="dot dot--red"></span>{{ d.todayCanceled }} canc.
+          </span>
         </div>
       </div>
+      <div class="kpi kpi--green">
+        <div class="kpi__icon-wrap kpi__icon-wrap--green">
+          <lucide-icon [name]="icons.DollarSign" [size]="20"></lucide-icon>
+        </div>
+        <div class="kpi__body">
+          <span class="kpi__label">Receita ({{ periodLabel() }})</span>
+          <b class="kpi__val">{{ fmtCurrency(d.todayRevenue) }}</b>
+          <span class="kpi__sub"><span class="dot dot--green"></span>{{ d.todayConfirmed }} confirmados</span>
+        </div>
+      </div>
+      <div class="kpi kpi--purple">
+        <div class="kpi__icon-wrap kpi__icon-wrap--purple">
+          <lucide-icon [name]="icons.TrendingUp" [size]="20"></lucide-icon>
+        </div>
+        <div class="kpi__body">
+          <span class="kpi__label">Receita do mês</span>
+          <b class="kpi__val">{{ fmtCurrency(d.currentMonthRevenue) }}</b>
+          <span class="kpi__sub"
+            [class.kpi__sub--pos]="isPositive(d.currentMonthRevenue, d.prevMonthRevenue)"
+            [class.kpi__sub--neg]="!isPositive(d.currentMonthRevenue, d.prevMonthRevenue)">
+            {{ monthDiff(d.currentMonthRevenue, d.prevMonthRevenue) }} vs mês ant.
+          </span>
+        </div>
+      </div>
+      <div class="kpi kpi--red">
+        <div class="kpi__icon-wrap kpi__icon-wrap--red">
+          <lucide-icon [name]="icons.AlertCircle" [size]="20"></lucide-icon>
+        </div>
+        <div class="kpi__body">
+          <span class="kpi__label">No-show</span>
+          <b class="kpi__val">{{ d.noShowRate30Days | number:'1.1-1' }}%</b>
+          <span class="kpi__sub"><span class="dot dot--red"></span>{{ d.todayNoShow }} hoje</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Linha 1: Agenda + Ranking -->
+    <div class="main-grid">
+
+      <!-- Agenda do dia -->
+      <div class="card">
+        <div class="card__head">
+          <div class="card__head-left">
+            <div class="card__icon card__icon--blue">
+              <lucide-icon [name]="icons.CalendarDays" [size]="14"></lucide-icon>
+            </div>
+            <h3>Agenda de hoje</h3>
+          </div>
+          <span class="card__badge">{{ selectedDateFrom() | date:'dd/MM':'America/Sao_Paulo' }} – {{ selectedDateTo() | date:'dd/MM':'America/Sao_Paulo' }}</span>
+        </div>
+        @if (d.professionals.length) {
+          <div class="agenda-grid">
+            <div class="barber-card" *ngFor="let prof of d.professionals">
+              <div class="barber-card__head">
+                <div class="barber-avatar">{{ prof.professionalName.charAt(0) }}</div>
+                <div class="barber-info">
+                  <span class="barber-name">{{ prof.professionalName }}</span>
+                  <div class="barber-stats">
+                    <span class="mini-stat mini-stat--green">{{ prof.todayConfirmed }}✓</span>
+                    <span class="mini-stat mini-stat--amber">{{ prof.todayPending }}⏳</span>
+                    <span class="mini-stat mini-stat--red" *ngIf="prof.todayNoShow > 0">{{ prof.todayNoShow }}✗</span>
+                  </div>
+                </div>
+                <div class="occ-wrap">
+                  <span class="occ-pct">{{ prof.occupancyRateToday | number:'1.0-0' }}%</span>
+                  <div class="occ-bar"><div class="occ-fill" [style.width.%]="prof.occupancyRateToday"></div></div>
+                </div>
+              </div>
+              @if (prof.todayAppointments.length) {
+                <div class="appt-list">
+                  <div class="appt-item" *ngFor="let a of prof.todayAppointments"
+                    [class]="'appt-item--' + a.status.toLowerCase()">
+                    <span class="appt-time">{{ fmtTime(a.startAt) }}</span>
+                    <div class="appt-info">
+                      <span class="appt-client">{{ a.clientName }}</span>
+                      <span class="appt-svc">{{ a.serviceName }} · {{ a.durationMinutes }}min</span>
+                    </div>
+                    <span class="status-pill" [class]="getStatusClass(a.status)">{{ getStatusLabel(a.status) }}</span>
+                  </div>
+                </div>
+              } @else {
+                <p class="empty-msg">Sem agendamentos ✂️</p>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <span class="empty-state__emoji">📅</span>
+            <p>Nenhum agendamento para hoje.</p>
+            <span class="empty-state__hint">Selecione outra data ou crie um agendamento.</span>
+          </div>
+        }
+      </div>
+
+      <!-- Ranking -->
+      <div class="card">
+        <div class="card__head">
+          <div class="card__head-left">
+            <div class="card__icon card__icon--gold">
+              <lucide-icon [name]="icons.Award" [size]="14"></lucide-icon>
+            </div>
+            <h3>Ranking de barbeiros</h3>
+          </div>
+          <span class="card__badge">{{ periodLabel() }}</span>
+        </div>
+        @if (d.byProfessional.length) {
+          <div class="rank-list">
+            <div class="rank-item" *ngFor="let p of d.byProfessional; let i = index">
+              <div class="rank-medal" [class.gold]="i===0" [class.silver]="i===1" [class.bronze]="i===2">
+                {{ i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1) }}
+              </div>
+              <div class="rank-avatar">{{ p.professionalName.charAt(0) }}</div>
+              <div class="rank-info">
+                <span class="rank-name">{{ p.professionalName }}</span>
+                <div class="rank-bar"><div class="rank-fill" [style.width.%]="rankBarWidth(p.totalAppointments)"></div></div>
+                <span class="rank-meta">{{ p.confirmedCount }} atend.<span *ngIf="(p.noShowRate || 0) > 0"> · {{ p.noShowRate | number:'1.1-1' }}% ns</span></span>
+              </div>
+              <div class="rank-right">
+                <span class="rank-rev">{{ fmtCurrency(p.totalRevenue) }}</span>
+                <span class="rank-ticket" *ngIf="p.averageTicket">tk {{ fmtCurrency(p.averageTicket) }}</span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <span class="empty-state__emoji">🏆</span>
+            <p>Nenhum atendimento no período.</p>
+          </div>
+        }
+      </div>
+
     </div>
 
-    <div class="card services-section">
-      <div class="card-header">
-        <h3>Top Serviços</h3>
-        <a href="javascript:void(0)" class="view-all">Ver tudo</a>
-      </div>
-      
-      <div class="services-list">
-        <div class="service-item" *ngFor="let service of topServices; let i = index">
-          <div class="rank">{{ i + 1 }}</div>
-          <div class="details">
-            <div class="info">
-              <span class="name">{{ service.name }}</span>
-              <span class="count">{{ service.count }} cortes</span>
+    <!-- Linha 2: Comparativo + Barras + Heatmap -->
+    <div class="bottom-grid">
+
+      <!-- Comparativo -->
+      <div class="card card--hide-mobile">
+        <div class="card__head">
+          <div class="card__head-left">
+            <div class="card__icon card__icon--purple">
+              <lucide-icon [name]="icons.BarChart2" [size]="14"></lucide-icon>
             </div>
-            <div class="progress-bg">
-              <div class="progress-bar" [style.width.%]="service.percent"></div>
-            </div>
+            <h3>Comparativo mensal</h3>
+          </div>
+        </div>
+        <div class="comp-list">
+          <div class="comp-row">
+            <span class="comp-label">Este mês</span>
+            <div class="comp-bar"><div class="comp-fill comp-fill--curr" [style.width.%]="(d.currentMonthTotal / ((d.currentMonthTotal + d.prevMonthTotal) || 1)) * 100"></div></div>
+            <span class="comp-val">{{ d.currentMonthTotal }}</span>
+          </div>
+          <div class="comp-row">
+            <span class="comp-label">Mês anterior</span>
+            <div class="comp-bar"><div class="comp-fill comp-fill--prev" [style.width.%]="(d.prevMonthTotal / ((d.currentMonthTotal + d.prevMonthTotal) || 1)) * 100"></div></div>
+            <span class="comp-val comp-val--muted">{{ d.prevMonthTotal }}</span>
+          </div>
+          <div class="comp-sep"></div>
+          <div class="comp-row"><span class="comp-label">Receita este mês</span><b class="comp-val">{{ fmtCurrency(d.currentMonthRevenue) }}</b></div>
+          <div class="comp-row"><span class="comp-label">Receita mês anterior</span><span class="comp-val comp-val--muted">{{ fmtCurrency(d.prevMonthRevenue) }}</span></div>
+          <div class="comp-sep"></div>
+          <div class="comp-delta" [class.comp-delta--pos]="isPositive(d.currentMonthRevenue, d.prevMonthRevenue)" [class.comp-delta--neg]="!isPositive(d.currentMonthRevenue, d.prevMonthRevenue)">
+            <lucide-icon [name]="isPositive(d.currentMonthRevenue, d.prevMonthRevenue) ? icons.TrendingUp : icons.TrendingDown" [size]="13"></lucide-icon>
+            {{ monthDiff(d.currentMonthRevenue, d.prevMonthRevenue) }} vs mês anterior
           </div>
         </div>
       </div>
+
+      <!-- Barras por dia -->
+      <div class="card card--hide-mobile">
+        <div class="card__head">
+          <div class="card__head-left">
+            <div class="card__icon card__icon--teal">
+              <lucide-icon [name]="icons.Activity" [size]="14"></lucide-icon>
+            </div>
+            <h3>Movimento por dia</h3>
+          </div>
+          <span class="card__badge">{{ periodLabel() }}</span>
+        </div>
+        @if (d.heatmap.length) {
+          <div class="bar-chart">
+            <div class="bar-col" *ngFor="let day of heatmapDays">
+              <div class="bar-track">
+                <div class="bar-fill"
+                  [style.height.%]="getDayTotal(day) > 0 ? (getDayTotal(day) / getDayMax()) * 100 : 2"
+                  [class.bar-fill--top]="getDayTotal(day) === getDayMax() && getDayMax() > 0">
+                </div>
+              </div>
+              <span class="bar-label">{{ day }}</span>
+              <span class="bar-count">{{ getDayTotal(day) }}</span>
+            </div>
+          </div>
+        } @else {
+          <p class="card__empty">Sem dados no período.</p>
+        }
+      </div>
+
+      <!-- Heatmap -->
+      <div class="card card--hide-mobile">
+        <div class="card__head">
+          <div class="card__head-left">
+            <div class="card__icon card__icon--amber">
+              <lucide-icon [name]="icons.Clock" [size]="14"></lucide-icon>
+            </div>
+            <h3>Horários de pico</h3>
+          </div>
+          <span class="card__badge">{{ periodLabel() }}</span>
+        </div>
+        @if (d.heatmap.length) {
+          <div class="heatmap">
+            <div class="hm-row hm-row--head">
+              <div class="hm-hl"></div>
+              <div class="hm-dl" *ngFor="let day of heatmapDays">{{ day }}</div>
+            </div>
+            <div class="hm-row" *ngFor="let hour of heatmapHours">
+              <div class="hm-hl">{{ hour }}h</div>
+              <div class="hm-cell" *ngFor="let day of heatmapDays"
+                [style.opacity]="getHeatOpacity(day, hour)"
+                [title]="getHeatCount(day, hour) + ' agend.'"></div>
+            </div>
+          </div>
+        } @else {
+          <p class="card__empty">Sem dados suficientes ainda.</p>
+        }
+      </div>
+
     </div>
 
-  </section>
+  </ng-container>
+
+  <!-- MINHA AGENDA — STAFF / ADMIN na própria -->
+  <ng-container *ngIf="!loading() && (!isAdmin() || dashView() === 'minha-agenda') && staffData() as d">
+
+    <section class="kpi-row">
+      <div class="kpi kpi--blue">
+        <div class="kpi__icon-wrap kpi__icon-wrap--blue"><lucide-icon [name]="icons.CalendarDays" [size]="20"></lucide-icon></div>
+        <div class="kpi__body"><span class="kpi__label">Agendamentos</span><b class="kpi__val">{{ d.todayTotal }}</b></div>
+      </div>
+      <div class="kpi kpi--green">
+        <div class="kpi__icon-wrap kpi__icon-wrap--green"><lucide-icon [name]="icons.CheckCircle" [size]="20"></lucide-icon></div>
+        <div class="kpi__body"><span class="kpi__label">Confirmados</span><b class="kpi__val">{{ d.todayConfirmed }}</b></div>
+      </div>
+      <div class="kpi kpi--purple">
+        <div class="kpi__icon-wrap kpi__icon-wrap--purple"><lucide-icon [name]="icons.Target" [size]="20"></lucide-icon></div>
+        <div class="kpi__body"><span class="kpi__label">Ocupação</span><b class="kpi__val">{{ d.occupancyRateToday | number:'1.0-0' }}%</b></div>
+      </div>
+      <div class="kpi kpi--red">
+        <div class="kpi__icon-wrap kpi__icon-wrap--red"><lucide-icon [name]="icons.XCircle" [size]="20"></lucide-icon></div>
+        <div class="kpi__body"><span class="kpi__label">No-show</span><b class="kpi__val">{{ d.todayNoShow }}</b></div>
+      </div>
+    </section>
+
+    <!-- Pills de período para Minha Agenda -->
+    <div class="period-pills" style="margin-bottom:16px">
+      <button *ngFor="let p of staffPeriods" class="period-pill"
+        [class.active]="staffPeriod() === p.value"
+        (click)="setStaffPeriod(p.value)">{{ p.label }}</button>
+    </div>
+
+    <div class="card">
+      <div class="card__head">
+        <div class="card__head-left">
+          <div class="card__icon card__icon--blue">
+            <lucide-icon [name]="icons.Scissors" [size]="14"></lucide-icon>
+          </div>
+          <h3>Agendamentos do dia</h3>
+        </div>
+        <span class="card__badge">{{ d.todayTotal }} agend. · {{ staffPeriodLabel() }}</span>
+      </div>
+      @if (d.todayAppointments.length) {
+        <div class="staff-tl">
+          <div class="staff-item" *ngFor="let a of d.todayAppointments"
+            [class]="'staff-item--' + a.status.toLowerCase()">
+            <div class="staff-time"><b>{{ fmtTime(a.startAt) }}</b><span>{{ a.durationMinutes }}min</span></div>
+            <div class="staff-body">
+              <span class="staff-client">{{ a.clientName }}</span>
+              <span class="staff-svc">{{ a.serviceName }}</span>
+            </div>
+            <div class="staff-actions">
+              <span class="status-pill" [class]="getStatusClass(a.status)">{{ getStatusLabel(a.status) }}</span>
+              <button class="act-btn act-btn--confirm" *ngIf="a.canConfirm" (click)="confirmArrival(a.id)" title="Confirmar chegada">
+                <lucide-icon [name]="icons.UserCheck" [size]="14"></lucide-icon>
+              </button>
+              <button class="act-btn act-btn--noshow" *ngIf="a.canMarkNoShow" (click)="markNoShow(a.id)" title="No-show">
+                <lucide-icon [name]="icons.XCircle" [size]="14"></lucide-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <span class="empty-state__emoji">✂️</span>
+          <p>Nenhum agendamento para hoje.</p>
+        </div>
+      }
+    </div>
+
+  </ng-container>
+
 </div>

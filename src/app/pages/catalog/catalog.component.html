@@ -106,7 +106,7 @@
                  maxlength="100" 
                  placeholder="Ex: Corte Degradê" 
                  autofocus>
-          <div class="hint text-right">{{formData.name?.length || 0}}/100</div>
+          <div class="hint text-right">{{formData.name.length || 0}}/100</div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 160px; gap: 16px;">
@@ -224,7 +224,11 @@
           <div class="users-grid">
             <ng-container *ngIf="currentItem.responsibleUsers?.length; else noUsers">
               <div class="user-chip" *ngFor="let u of currentItem.responsibleUsers">
-                <div class="avatar-mini">{{ u.name.charAt(0) }}</div>
+                @if (u.photoUrl || u.avatarUrl) {
+                  <img [src]="(u.photoUrl || u.avatarUrl)!" [alt]="u.name" class="avatar-mini avatar-mini-img">
+                } @else {
+                  <div class="avatar-mini">{{ u.name.charAt(0) }}</div>
+                }
                 <span>{{ u.name }}</span>
               </div>
             </ng-container>
@@ -319,10 +323,19 @@
 <div class="modal-overlay" *ngIf="showSuccessModal">
   <div class="modal-card small-modal fade-in-up">
     <div class="modal-body text-center" style="padding-top: 30px; padding-bottom: 30px;">
-      <div class="success-checkmark-anim"><div class="check-icon"><span class="icon-line line-tip"></span><span class="icon-line line-long"></span><div class="icon-circle"></div><div class="icon-fix"></div></div></div>
-      <h3 class="success-title" style="margin-top: 16px;">Sucesso!</h3>
-      <p class="success-message" style="font-size: 14px; margin-top: 8px;">{{ successMessage }}</p>
-      <div class="action-buttons-center" style="margin-top: 24px;"><button class="btn-primary rounded-pill full-width" (click)="closeModals()">OK, Entendi</button></div>
+      <div class="success-checkmark-anim">
+        <div class="check-icon">
+          <span class="icon-line line-tip"></span>
+          <span class="icon-line line-long"></span>
+          <div class="icon-circle"></div>
+          <div class="icon-fix"></div>
+        </div>
+      </div>
+      <h3 style="margin-top: 16px; color: var(--text-main);">Sucesso!</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px; line-height: 1.5;">{{ successMessage }}</p>
+      <div class="action-buttons-center" style="margin-top: 24px;">
+        <button class="btn-primary rounded-pill full-width" (click)="closeModals()">OK, Entendi</button>
+      </div>
     </div>
   </div>
 </div>

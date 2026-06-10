@@ -57,6 +57,11 @@ $bg-card: var(--bg-card);
     justify-content: space-between;
     gap: 10px;
 
+    @media (max-width: 600px) {
+      justify-content: flex-start; 
+      gap: 8px;
+    }
+
     .sub-title {
       font-weight: 900;
       color: $text-main;
@@ -71,6 +76,11 @@ $bg-card: var(--bg-card);
       background: $bg-card;
       padding: 6px 10px;
       border-radius: 999px;
+
+      @media (max-width: 600px) {
+        font-size: 10px; 
+        padding: 3px 8px; 
+      }
     }
   }
 }
@@ -130,7 +140,9 @@ $bg-card: var(--bg-card);
   gap: 12px;
 
   @media (max-width: 600px) {
-    gap: 10px;
+    grid-template-columns: 93%; 
+    justify-content: start; 
+    gap: 20px;
   }
 }
 
@@ -365,6 +377,8 @@ $bg-card: var(--bg-card);
     cursor: not-allowed;
   }
 
+  &.full-width { width: 100%; justify-content: center; }
+
   @media (max-width: 600px) {
     width: 100%;
     justify-content: center;
@@ -508,6 +522,8 @@ $bg-card: var(--bg-card);
   animation: modalOverlayFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.action-buttons-center { display: flex; justify-content: center; gap: 10px; }
+
 .modal-card {
   background: $bg-card;
   width: 100%;
@@ -518,6 +534,7 @@ $bg-card: var(--bg-card);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  &.small-modal { max-width: 340px; }
 
   .modal-header {
     padding: 16px 24px;
@@ -539,13 +556,14 @@ $bg-card: var(--bg-card);
     padding: 24px;
     overflow-y: auto;
     flex: 1;
+    min-height: 0;
 
-    &::-webkit-scrollbar { width: 8px; }
-    &::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 10px; }
-    &::-webkit-scrollbar-thumb { 
-      background: rgba(0, 0, 0, 0.2); 
+    &::-webkit-scrollbar { width: 6px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(128, 128, 128, 0.3);
       border-radius: 10px;
-      &:hover { background: rgba(0, 0, 0, 0.3); }
+      &:hover { background: rgba(128, 128, 128, 0.5); }
     }
   }
 
@@ -576,8 +594,8 @@ $bg-card: var(--bg-card);
 
   @media (max-width: 520px) {
     max-width: 100%;
-    max-height: 100vh;
-    height: 100vh;
+    max-height: 100dvh;
+    height: 100dvh;
     border-radius: 0;
   }
 
@@ -617,7 +635,11 @@ $bg-card: var(--bg-card);
   justify-content: center;
   cursor: pointer;
   color: $text-muted;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s;
+
+  lucide-icon {
+    transition: none;
+  }
 
   &:hover {
     background: rgba(0, 0, 0, 0.05);
@@ -1085,4 +1107,97 @@ $bg-card: var(--bg-card);
   65% { width: 0; right: 46px; top: 54px; }
   84% { width: 55px; right: 0px; top: 35px; }
   100% { width: 47px; right: 8px; top: 38px; }
+}
+
+.avatar-circle-img {
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+/* ── Barra de Pesquisa ── */
+.search-container {
+  margin-bottom: 20px;
+  display: flex;
+  
+  /* Alinha à esquerda no desktop e no mobile */
+  justify-content: flex-start; 
+
+  @media (max-width: 600px) {
+    margin-bottom: 16px;
+    /* No mobile, garantimos que ela ocupe quase toda a tela, 
+       mas ainda mantendo o alinhamento à esquerda */
+    width: 70%;
+  }
+}
+
+.search-box {
+  position: relative;
+  width: 100%;
+  max-width: 380px; 
+
+  @media (max-width: 600px) {
+    max-width: 93%; 
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: $text-muted;
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 40px 12px 42px;
+    border-radius: 12px;
+    border: 1px solid $border-color;
+    background: $bg-card;
+    color: $text-main;
+    font-size: 14px;
+    font-weight: 500;
+    outline: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+
+    &::placeholder {
+      color: rgba(148, 163, 184, 0.8);
+    }
+
+    &:focus {
+      border-color: $accent;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+  }
+
+  .clear-search-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: $text-muted;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+
+    lucide-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: $danger;
+    }
+  }
 }

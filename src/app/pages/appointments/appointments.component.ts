@@ -4,9 +4,13 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { debounceTime } from 'rxjs';
 
+import { todaySP, daysAgoSP, firstOfMonthSP } from '../../core/utils/date.utils';
+
 import {
   AppointmentsService,
   CreateInternalAppointmentRequest,
+  CreateMultiServiceAppointmentRequest,
+  RescheduleRequest,
   ProfessionalSimple,
   AvailableSlot,
   ServiceSimple
@@ -20,10 +24,12 @@ import {
   Plus, Search, X, CalendarDays, User, Scissors, Clock,
   UserCheck, Check, ChevronLeft, ChevronRight,
   CalendarX2, Eye, History, AlertCircle, Info, CheckCircle,
-  Mail, Phone, MessageSquare, FileDown, Download, Ban, ShieldAlert
+  Mail, Phone, MessageSquare, FileDown, Download, Ban, ShieldAlert,
+  RefreshCw, Layers, Copy
 } from 'lucide-angular';
 
 type Role = 'DEV' | 'ADMIN' | 'ADM' | 'STAFF';
+type WizardMode = 'single' | 'multi';
 
 @Component({
   selector: 'app-appointments',
@@ -43,7 +49,8 @@ export class AppointmentsComponent implements OnInit {
     Plus, Search, X, CalendarDays, User, Scissors, Clock,
     UserCheck, Check, ChevronLeft, ChevronRight,
     CalendarX2, Eye, History, AlertCircle, Info, CheckCircle,
-    Mail, Phone, MessageSquare, FileDown, Download, Ban, ShieldAlert
+    Mail, Phone, MessageSquare, FileDown, Download, Ban, ShieldAlert,
+    RefreshCw, Layers, Copy
   };
 
   role:   Role;
@@ -67,66 +74,109 @@ export class AppointmentsComponent implements OnInit {
     professionalUserId: this.fb.control<number | null>(null),
   });
 
+  // ── Filtro de período ──────────────────────────────────────────────────────
+  periods = [
+    { label: 'Hoje',     value: 'today' },
+    { label: '7 dias',   value: '7d'    },
+    { label: '30 dias',  value: '30d'   },
+    { label: 'Este mês', value: 'month' },
+    { label: 'Todos',    value: 'all'   },
+  ] as const;
+  activePeriod = signal<'today' | '7d' | '30d' | 'month' | 'all'>('today');
+
   // ── UI State ──────────────────────────────────────────────────────────────
   filtersOpen = false;
 
   // ── Wizard ────────────────────────────────────────────────────────────────
-  showNewAppointmentModal  = signal(false);
-  isSavingAppointment      = signal(false);
-  newAppointmentForm!:       FormGroup;
-  todayDate                = new Date().toISOString().split('T')[0];
-  formError                = signal<string | null>(null);
-  currentStep              = signal(1);
+  wizardMode              = signal<WizardMode>('single');
+  showNewAppointmentModal = signal(false);
+  isSavingAppointment     = signal(false);
+  newAppointmentForm!:      FormGroup;
+  todayDate               = todaySP();
+  formError               = signal<string | null>(null);
+  currentStep             = signal(1);
 
-  availableServices        = signal<ServiceSimple[]>([]);
-  isLoadingServices        = signal(false);
+  availableServices      = signal<ServiceSimple[]>([]);
+  isLoadingServices      = signal(false);
 
-  modalProfessionals       = signal<ProfessionalSimple[]>([]);
-  isLoadingProfessionals   = signal(false);
+  modalProfessionals     = signal<ProfessionalSimple[]>([]);
+  isLoadingProfessionals = signal(false);
 
-  professionalPage         = signal(0);
-  professionalsPerPage     = 12;
+  professionalPage     = signal(0);
+  professionalsPerPage = 12;
 
   paginatedProfessionals = computed(() => {
     const all   = this.modalProfessionals();
     const start = this.professionalPage() * this.professionalsPerPage;
     return all.slice(start, start + this.professionalsPerPage);
   });
-
   totalProfessionalPages = computed(() =>
     Math.ceil(this.modalProfessionals().length / this.professionalsPerPage)
   );
 
-  availableSlots     = signal<AvailableSlot[]>([]);
-  isLoadingSlots     = signal(false);
-  selectedSlot       = signal<AvailableSlot | null>(null);
+  availableSlots = signal<AvailableSlot[]>([]);
+  isLoadingSlots = signal(false);
+  selectedSlot   = signal<AvailableSlot | null>(null);
 
-  slotPage           = signal(0);
-  slotsPerPage       = 12;
-
+  slotPage     = signal(0);
+  slotsPerPage = 12;
   paginatedSlots = computed(() => {
     const all   = this.availableSlots();
     const start = this.slotPage() * this.slotsPerPage;
     return all.slice(start, start + this.slotsPerPage);
   });
-
   totalSlotPages = computed(() =>
     Math.ceil(this.availableSlots().length / this.slotsPerPage)
   );
 
-  prevSlotPage()         { if (this.slotPage() > 0)                                       this.slotPage.set(this.slotPage() - 1); }
-  nextSlotPage()         { if (this.slotPage() < this.totalSlotPages() - 1)               this.slotPage.set(this.slotPage() + 1); }
-  prevProfessionalPage() { if (this.professionalPage() > 0)                               this.professionalPage.set(this.professionalPage() - 1); }
-  nextProfessionalPage() { if (this.professionalPage() < this.totalProfessionalPages()-1) this.professionalPage.set(this.professionalPage() + 1); }
+  // ── Multi-serviço ─────────────────────────────────────────────────────────
+  /** IDs dos serviços selecionados no modo multi, na ordem */
+  selectedServiceIds = signal<number[]>([]);
+
+  totalMultiDuration = computed(() => {
+    const ids      = this.selectedServiceIds();
+    const services = this.availableServices();
+    return ids.reduce((sum, id) => {
+      const svc = services.find(s => s.id === id);
+      return sum + (svc?.durationMinutes ?? 0);
+    }, 0);
+  });
+
+  /** Profissionais que são responsáveis em TODOS os serviços selecionados */
+  multiCommonProfessionals = computed(() => {
+    const ids      = this.selectedServiceIds();
+    const services = this.availableServices();
+    if (ids.length < 2) return [];
+
+    const responsibleSets = ids.map(id => {
+      const svc = services.find(s => s.id === id);
+      return new Set((svc?.responsibles ?? []).map(p => p.id));
+    });
+
+    const first    = responsibleSets[0];
+    const commonIds = [...first].filter(id => responsibleSets.every(set => set.has(id)));
+
+    const firstSvc = services.find(s => s.id === ids[0]);
+    return (firstSvc?.responsibles ?? []).filter(p => commonIds.includes(p.id));
+  });
+
+  // ── Reagendamento ─────────────────────────────────────────────────────────
+  showRescheduleModal     = signal(false);
+  isRescheduling          = signal(false);
+  appointmentToReschedule = signal<Appointment | null>(null);
+  rescheduleDate          = signal('');
+  rescheduleSlots         = signal<AvailableSlot[]>([]);
+  isLoadingRescheduleSlots = signal(false);
+  selectedRescheduleSlot  = signal<AvailableSlot | null>(null);
 
   // ── Modais ────────────────────────────────────────────────────────────────
-  showDetailsModal     = signal(false);
-  selectedAppointment  = signal<Appointment | null>(null);
+  showDetailsModal    = signal(false);
+  selectedAppointment = signal<Appointment | null>(null);
 
-  showCancelModal      = signal(false);
-  isCancelling         = signal(false);
-  appointmentToCancel  = signal<Appointment | null>(null);
-  cancelMessage        = '';
+  showCancelModal     = signal(false);
+  isCancelling        = signal(false);
+  appointmentToCancel = signal<Appointment | null>(null);
+  cancelMessage       = '';
 
   showSuccessModal     = signal(false);
   successTitle         = signal('');
@@ -146,7 +196,8 @@ export class AppointmentsComponent implements OnInit {
     this.initNewAppointmentForm();
     this.setupFormListeners();
     this.loadServices();
-    this.load();
+    // Inicializar com filtro de hoje
+    this.setPeriod('today');
   }
 
   // ── Helpers privados ──────────────────────────────────────────────────────
@@ -175,8 +226,26 @@ export class AppointmentsComponent implements OnInit {
       this.form.patchValue({ professionalUserId: this.userId }, { emitEvent: false });
       this.form.get('professionalUserId')?.disable({ emitEvent: false });
     }
-    this.form.valueChanges.pipe(debounceTime(400)).subscribe(() => {
+    this.form.valueChanges.pipe(debounceTime(400)).subscribe((val) => {
       this.pageIndex.set(0);
+      // Se o usuário editou datas manualmente (não via pill), desfaz pill ativa
+      const from = val.dateFrom ?? '';
+      const to   = val.dateTo   ?? '';
+      if (from || to) {
+        const p = this.activePeriod();
+        // Verifica se as datas batem com alguma pill
+        const today      = todaySP();
+        const g6         = daysAgoSP(6);
+        const g29        = daysAgoSP(29);
+        const monthStart = firstOfMonthSP();
+        const match =
+          (p === 'today' && from === today  && to === today)  ||
+          (p === '7d'    && from === g6     && to === today)  ||
+          (p === '30d'   && from === g29    && to === today)  ||
+          (p === 'month' && from === monthStart && to === today) ||
+          (p === 'all'   && !from && !to);
+        if (!match) this.activePeriod.set('all'); // 'Todos' fica ativo quando custom
+      }
       this.load();
     });
   }
@@ -188,8 +257,8 @@ export class AppointmentsComponent implements OnInit {
   loadServices() {
     this.isLoadingServices.set(true);
     this.api.getServicesWithResponsibles().subscribe({
-      next: services => { this.availableServices.set(services); this.isLoadingServices.set(false); },
-      error: ()      => this.isLoadingServices.set(false)
+      next: s => { this.availableServices.set(s); this.isLoadingServices.set(false); },
+      error: () => this.isLoadingServices.set(false)
     });
   }
 
@@ -206,7 +275,6 @@ export class AppointmentsComponent implements OnInit {
       size:               this.pageSize(),
       sort:               'startAt,desc',
     };
-
     this.api.list(filter).subscribe({
       next: res => {
         this.items.set(res.content ?? []);
@@ -226,32 +294,15 @@ export class AppointmentsComponent implements OnInit {
 
   downloadReceipt(appt: Appointment, fromSuccessModal = false) {
     if (!appt?.id) return;
-
-    fromSuccessModal
-      ? this.isDownloadingPdf.set(true)
-      : this.isDownloadingPdfDetails.set(true);
-
+    fromSuccessModal ? this.isDownloadingPdf.set(true) : this.isDownloadingPdfDetails.set(true);
     this.api.downloadReceipt(appt.id).subscribe({
       next: (blob: Blob) => {
-        const code     = appt.code || String(appt.id);
-        const url      = URL.createObjectURL(blob);
-        const link     = document.createElement('a');
-        link.href      = url;
-        link.download  = `comprovante-${code}.pdf`;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-        fromSuccessModal
-          ? this.isDownloadingPdf.set(false)
-          : this.isDownloadingPdfDetails.set(false);
+        this.triggerDownload(blob, `comprovante-${appt.code || appt.id}.pdf`);
+        fromSuccessModal ? this.isDownloadingPdf.set(false) : this.isDownloadingPdfDetails.set(false);
       },
       error: () => {
         this.toastService.error('Não foi possível baixar o comprovante.');
-        fromSuccessModal
-          ? this.isDownloadingPdf.set(false)
-          : this.isDownloadingPdfDetails.set(false);
+        fromSuccessModal ? this.isDownloadingPdf.set(false) : this.isDownloadingPdfDetails.set(false);
       }
     });
   }
@@ -261,15 +312,7 @@ export class AppointmentsComponent implements OnInit {
     this.isDownloadingPdf.set(true);
     this.api.downloadReceipt(id).subscribe({
       next: (blob: Blob) => {
-        const url     = URL.createObjectURL(blob);
-        const link    = document.createElement('a');
-        link.href     = url;
-        link.download = `comprovante-${code || id}.pdf`;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        this.triggerDownload(blob, `comprovante-${code || id}.pdf`);
         this.isDownloadingPdf.set(false);
       },
       error: () => {
@@ -279,14 +322,44 @@ export class AppointmentsComponent implements OnInit {
     });
   }
 
+  private triggerDownload(blob: Blob, filename: string) {
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href  = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
   // ════════════════════════════════════════════════════════════════════════
-  //  WIZARD
+  //  WIZARD — MODO SINGLE
   // ════════════════════════════════════════════════════════════════════════
+
+  openNewAppointmentModal(mode: WizardMode = 'single') {
+    this.wizardMode.set(mode);
+    this.newAppointmentForm.reset({
+      clientName: '', clientEmail: '', clientPhone: '',
+      serviceId: null, professionalUserId: null, date: ''
+    });
+    this.selectedServiceIds.set([]);
+    this.modalProfessionals.set([]);
+    this.availableSlots.set([]);
+    this.selectedSlot.set(null);
+    this.formError.set(null);
+    this.currentStep.set(1);
+    this.showNewAppointmentModal.set(true);
+  }
+
+  closeNewAppointmentModal() { this.showNewAppointmentModal.set(false); }
 
   nextStep() {
     if (this.canGoNext()) {
       const step = this.currentStep();
-      if (step === 2) this.loadProfessionalsForService();
+      if (this.wizardMode() === 'single' && step === 2) this.loadProfessionalsForService();
+      if (this.wizardMode() === 'multi'  && step === 2) this.loadMultiProfessionals();
       this.currentStep.set(step + 1);
     }
   }
@@ -297,6 +370,7 @@ export class AppointmentsComponent implements OnInit {
 
   canGoNext(): boolean {
     const step = this.currentStep();
+    const mode = this.wizardMode();
     const f    = this.newAppointmentForm;
 
     if (step === 1) return (
@@ -304,12 +378,18 @@ export class AppointmentsComponent implements OnInit {
       f.get('clientEmail')?.valid === true &&
       f.get('clientPhone')?.valid === true
     );
-    if (step === 2) return !!f.get('serviceId')?.value;
-    if (step === 3) return !!f.get('professionalUserId')?.value;
 
-    // ─── ETAPA 4: precisa de data E horário selecionado ───────────────────
-    // BUG CORRIGIDO: antes retornava true sem verificar slot
-    if (step === 4) return !!f.get('date')?.value && this.selectedSlot() !== null;
+    if (mode === 'single') {
+      if (step === 2) return !!f.get('serviceId')?.value;
+      if (step === 3) return !!f.get('professionalUserId')?.value;
+      if (step === 4) return !!f.get('date')?.value && this.selectedSlot() !== null;
+    }
+
+    if (mode === 'multi') {
+      if (step === 2) return this.selectedServiceIds().length >= 2;
+      if (step === 3) return !!f.get('professionalUserId')?.value;
+      if (step === 4) return !!f.get('date')?.value && this.selectedSlot() !== null;
+    }
 
     return true;
   }
@@ -321,35 +401,64 @@ export class AppointmentsComponent implements OnInit {
     this.selectedSlot.set(null);
   }
 
+  // ── Multi-serviço helpers ─────────────────────────────────────────────────
+
+  toggleMultiService(id: number) {
+    const current = this.selectedServiceIds();
+    if (current.includes(id)) {
+      this.selectedServiceIds.set(current.filter(x => x !== id));
+    } else if (current.length < 5) {
+      this.selectedServiceIds.set([...current, id]);
+    }
+    // reset profissional e slots ao mudar seleção
+    this.newAppointmentForm.patchValue({ professionalUserId: null, date: '' });
+    this.availableSlots.set([]);
+    this.selectedSlot.set(null);
+  }
+
+  isMultiServiceSelected(id: number): boolean {
+    return this.selectedServiceIds().includes(id);
+  }
+
+  getMultiServiceOrder(id: number): number {
+    return this.selectedServiceIds().indexOf(id) + 1;
+  }
+
+  private loadMultiProfessionals() {
+    const profs = this.multiCommonProfessionals();
+    this.modalProfessionals.set(profs);
+  }
+
+  private loadProfessionalsForService() {
+    const serviceId = this.newAppointmentForm.get('serviceId')?.value;
+    if (!serviceId) return;
+    this.isLoadingProfessionals.set(true);
+    const cached = this.availableServices().find(s => s.id === Number(serviceId));
+    if (cached?.responsibles?.length) {
+      this.modalProfessionals.set(cached.responsibles);
+      this.isLoadingProfessionals.set(false);
+      return;
+    }
+    this.api.getServiceById(Number(serviceId)).subscribe({
+      next:  s => { this.modalProfessionals.set(s?.responsibles ?? []); this.isLoadingProfessionals.set(false); },
+      error: () => { this.modalProfessionals.set([]);                    this.isLoadingProfessionals.set(false); }
+    });
+  }
+
   selectProfessional(id: number) {
     this.newAppointmentForm.patchValue({ professionalUserId: id, date: '' });
     this.availableSlots.set([]);
     this.selectedSlot.set(null);
   }
 
-  private loadProfessionalsForService() {
-    const serviceId = this.newAppointmentForm.get('serviceId')?.value;
-    if (!serviceId) return;
-
-    this.isLoadingProfessionals.set(true);
-    const cached = this.availableServices().find(s => s.id === Number(serviceId));
-
-    if (cached?.responsibles?.length) {
-      this.modalProfessionals.set(cached.responsibles);
-      this.isLoadingProfessionals.set(false);
-      return;
-    }
-
-    this.api.getServiceById(Number(serviceId)).subscribe({
-      next:  service => { this.modalProfessionals.set(service?.responsibles ?? []); this.isLoadingProfessionals.set(false); },
-      error: ()      => { this.modalProfessionals.set([]);                          this.isLoadingProfessionals.set(false); }
-    });
-  }
-
   onDateChange() {
-    const serviceId      = this.newAppointmentForm.get('serviceId')?.value;
-    const professionalId = this.newAppointmentForm.get('professionalUserId')?.value;
-    const date           = this.newAppointmentForm.get('date')?.value;
+    const f    = this.newAppointmentForm;
+    const mode = this.wizardMode();
+    const professionalId = f.get('professionalUserId')?.value;
+    const date           = f.get('date')?.value;
+    const serviceId      = mode === 'single'
+      ? f.get('serviceId')?.value
+      : this.selectedServiceIds()[0]; // usa o primeiro serviço para verificar slots
 
     this.availableSlots.set([]);
     this.selectedSlot.set(null);
@@ -363,15 +472,37 @@ export class AppointmentsComponent implements OnInit {
     });
   }
 
-  selectSlot(slot: AvailableSlot)       { this.selectedSlot.set(slot); }
-  canSubmitNewAppointment(): boolean    { return !!this.newAppointmentForm.get('date')?.value && this.selectedSlot() !== null; }
-  getSelectedServiceName(): string      { const id = Number(this.newAppointmentForm.get('serviceId')?.value);          return this.availableServices().find(s => s.id === id)?.name || ''; }
-  getSelectedProfessionalName(): string { const id = Number(this.newAppointmentForm.get('professionalUserId')?.value); return this.modalProfessionals().find(p => p.id === id)?.name || ''; }
+  selectSlot(slot: AvailableSlot)    { this.selectedSlot.set(slot); }
+  canSubmitNewAppointment(): boolean { return !!this.newAppointmentForm.get('date')?.value && this.selectedSlot() !== null; }
+
+  getSelectedServiceName(): string {
+    const id = Number(this.newAppointmentForm.get('serviceId')?.value);
+    return this.availableServices().find(s => s.id === id)?.name || '';
+  }
+
+  getSelectedProfessionalName(): string {
+    const id = Number(this.newAppointmentForm.get('professionalUserId')?.value);
+    return this.modalProfessionals().find(p => p.id === id)?.name || '';
+  }
+
+  getMultiSelectedServicesNames(): string {
+    const ids      = this.selectedServiceIds();
+    const services = this.availableServices();
+    return ids.map(id => services.find(s => s.id === id)?.name || '').filter(Boolean).join(' + ');
+  }
 
   submitNewAppointment() {
     this.formError.set(null);
     if (!this.canSubmitNewAppointment()) { this.formError.set('Selecione uma data e horário.'); return; }
 
+    if (this.wizardMode() === 'multi') {
+      this.submitMultiAppointment();
+    } else {
+      this.submitSingleAppointment();
+    }
+  }
+
+  private submitSingleAppointment() {
     this.isSavingAppointment.set(true);
     const v    = this.newAppointmentForm.value as any;
     const slot = this.selectedSlot()!;
@@ -400,6 +531,94 @@ export class AppointmentsComponent implements OnInit {
     });
   }
 
+  private submitMultiAppointment() {
+    this.isSavingAppointment.set(true);
+    const v    = this.newAppointmentForm.value as any;
+    const slot = this.selectedSlot()!;
+
+    const payload: CreateMultiServiceAppointmentRequest = {
+      clientName:         String(v.clientName).trim(),
+      clientEmail:        String(v.clientEmail).trim().toLowerCase(),
+      clientPhone:        String(v.clientPhone).replace(/\D/g, ''),
+      professionalUserId: Number(v.professionalUserId),
+      serviceIds:         this.selectedServiceIds(),
+      startAt:            `${v.date}T${slot.start}:00`,
+    };
+
+    this.api.createMulti(payload).subscribe({
+      next: appts => {
+        this.isSavingAppointment.set(false);
+        this.closeNewAppointmentModal();
+        const first = appts?.[0];
+        this.triggerSuccess(
+          `${appts.length} Agendamentos Criados!`,
+          `${this.getMultiSelectedServicesNames()} — iniciando às ${slot.start}`,
+          first
+        );
+        this.load();
+      },
+      error: err => {
+        this.isSavingAppointment.set(false);
+        this.formError.set(err.error?.message || 'Erro ao criar agendamentos.');
+      },
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  REAGENDAMENTO
+  // ════════════════════════════════════════════════════════════════════════
+
+  openReschedule(appt: Appointment) {
+    this.appointmentToReschedule.set(appt);
+    this.rescheduleDate.set('');
+    this.rescheduleSlots.set([]);
+    this.selectedRescheduleSlot.set(null);
+    this.showRescheduleModal.set(true);
+  }
+
+  closeRescheduleModal() {
+    this.showRescheduleModal.set(false);
+    this.appointmentToReschedule.set(null);
+  }
+
+  onRescheduleDateChange(date: string) {
+    this.rescheduleDate.set(date);
+    this.rescheduleSlots.set([]);
+    this.selectedRescheduleSlot.set(null);
+
+    const appt = this.appointmentToReschedule();
+    if (!appt || !date) return;
+
+    this.isLoadingRescheduleSlots.set(true);
+    this.api.getAvailableSlots(appt.serviceId, appt.professionalUserId, date).subscribe({
+      next:  slots => { this.rescheduleSlots.set(slots); this.isLoadingRescheduleSlots.set(false); },
+      error: ()    => { this.rescheduleSlots.set([]);    this.isLoadingRescheduleSlots.set(false); }
+    });
+  }
+
+  confirmReschedule() {
+    const appt = this.appointmentToReschedule();
+    const slot = this.selectedRescheduleSlot();
+    const date = this.rescheduleDate();
+    if (!appt || !slot || !date) return;
+
+    this.isRescheduling.set(true);
+    const payload: RescheduleRequest = { newStartAt: `${date}T${slot.start}:00` };
+
+    this.api.reschedule(appt.id, payload).subscribe({
+      next: updated => {
+        this.isRescheduling.set(false);
+        this.closeRescheduleModal();
+        this.triggerSuccess('Reagendado!', `Novo horário: ${date} às ${slot.start}`);
+        this.load();
+      },
+      error: err => {
+        this.isRescheduling.set(false);
+        this.toastService.error(err.error?.message || 'Erro ao reagendar.');
+      }
+    });
+  }
+
   // ════════════════════════════════════════════════════════════════════════
   //  FILTROS & PAGINAÇÃO
   // ════════════════════════════════════════════════════════════════════════
@@ -407,6 +626,24 @@ export class AppointmentsComponent implements OnInit {
   hasActiveFilters(): boolean {
     const raw = this.form.getRawValue();
     return !!(raw.q || raw.status || raw.dateFrom || raw.dateTo);
+  }
+
+  setPeriod(p: 'today' | '7d' | '30d' | 'month' | 'all') {
+    this.activePeriod.set(p);
+    const today      = todaySP();
+    const getDate    = (daysAgo: number) => daysAgoSP(daysAgo);
+    const monthStart = firstOfMonthSP();
+
+    const map: Record<string, { dateFrom: string; dateTo: string }> = {
+      today: { dateFrom: today,       dateTo: today     },
+      '7d':  { dateFrom: getDate(6),  dateTo: today     },
+      '30d': { dateFrom: getDate(29), dateTo: today     },
+      month: { dateFrom: monthStart,  dateTo: today     },
+      all:   { dateFrom: '',          dateTo: ''        },
+    };
+    this.form.patchValue({ ...map[p], q: '', status: '' }, { emitEvent: false });
+    this.pageIndex.set(0);
+    this.load();
   }
 
   clearFilters() {
@@ -419,6 +656,11 @@ export class AppointmentsComponent implements OnInit {
   maxPageIndex(): number { return Math.max(0, Math.ceil(this.totalElements() / this.pageSize()) - 1); }
   prevPage()             { if (this.pageIndex() > 0)                   { this.pageIndex.set(this.pageIndex() - 1); this.load(); } }
   nextPage()             { if (this.pageIndex() < this.maxPageIndex()) { this.pageIndex.set(this.pageIndex() + 1); this.load(); } }
+
+  prevSlotPage()         { if (this.slotPage() > 0)                                     this.slotPage.set(this.slotPage() - 1); }
+  nextSlotPage()         { if (this.slotPage() < this.totalSlotPages() - 1)              this.slotPage.set(this.slotPage() + 1); }
+  prevProfessionalPage() { if (this.professionalPage() > 0)                              this.professionalPage.set(this.professionalPage() - 1); }
+  nextProfessionalPage() { if (this.professionalPage() < this.totalProfessionalPages()-1)this.professionalPage.set(this.professionalPage() + 1); }
 
   // ════════════════════════════════════════════════════════════════════════
   //  STATUS HELPERS
@@ -439,6 +681,13 @@ export class AppointmentsComponent implements OnInit {
            now <= new Date(startAt.getTime() + 10 * 60_000);
   }
 
+  canReschedule(a: Appointment): boolean {
+    return a.status === 'PENDING';
+  }
+
+  canMarkNoShow(a: Appointment): boolean {
+    return a.status === 'PENDING' && new Date() > new Date(a.startAt);
+  }
 
   // ════════════════════════════════════════════════════════════════════════
   //  AUDIT HELPERS
@@ -471,6 +720,16 @@ export class AppointmentsComponent implements OnInit {
     return phone;
   }
 
+  copiedField = signal<string | null>(null);
+
+  copyToClipboard(text: string | null | undefined, field: string) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedField.set(field);
+      setTimeout(() => this.copiedField.set(null), 2000);
+    });
+  }
+
   // ════════════════════════════════════════════════════════════════════════
   //  MODAIS
   // ════════════════════════════════════════════════════════════════════════
@@ -479,23 +738,10 @@ export class AppointmentsComponent implements OnInit {
     this.selectedAppointment.set(appointment);
     this.showDetailsModal.set(true);
   }
-
   closeDetailsModal() {
     this.showDetailsModal.set(false);
     this.selectedAppointment.set(null);
   }
-
-  openNewAppointmentModal() {
-    this.newAppointmentForm.reset({ clientName: '', clientEmail: '', clientPhone: '', serviceId: null, professionalUserId: null, date: '' });
-    this.modalProfessionals.set([]);
-    this.availableSlots.set([]);
-    this.selectedSlot.set(null);
-    this.formError.set(null);
-    this.currentStep.set(1);
-    this.showNewAppointmentModal.set(true);
-  }
-
-  closeNewAppointmentModal() { this.showNewAppointmentModal.set(false); }
 
   onPhoneInput(event: any) {
     let n = event.target.value.replace(/\D/g, '');
@@ -511,7 +757,6 @@ export class AppointmentsComponent implements OnInit {
     this.cancelMessage = '';
     this.showCancelModal.set(true);
   }
-
   closeCancelModal() {
     this.showCancelModal.set(false);
     this.appointmentToCancel.set(null);
@@ -520,13 +765,12 @@ export class AppointmentsComponent implements OnInit {
   confirmCancel() {
     const appt = this.appointmentToCancel();
     if (!appt) return;
-
     this.isCancelling.set(true);
     this.api.cancelInternal(appt.id, { message: this.cancelMessage || null }).subscribe({
       next: () => {
         this.isCancelling.set(false);
         this.closeCancelModal();
-        this.triggerSuccess('Agendamento Cancelado', `O agendamento de ${appt.clientName} foi cancelado com sucesso.`);
+        this.triggerSuccess('Agendamento Cancelado', `O agendamento de ${appt.clientName} foi cancelado.`);
         this.load();
       },
       error: err => {
@@ -543,6 +787,12 @@ export class AppointmentsComponent implements OnInit {
     });
   }
 
+  markNoShow(appt: Appointment) {
+    this.api.markNoShow(appt.id).subscribe({
+      next:  () => { this.toastService.success('No-show registrado.'); this.load(); },
+      error: err => this.toastService.error(err.error?.message || 'Erro ao marcar no-show.'),
+    });
+  }
 
   // ── Modal de sucesso ──────────────────────────────────────────────────────
   private _successAppt: Appointment | null = null;

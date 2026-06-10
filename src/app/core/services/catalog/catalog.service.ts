@@ -11,7 +11,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
-  private readonly API_URL = 'http://localhost:8080/api/admin/services';
+  private readonly API_URL = 'https://api.falcaobarbearia.com.br/api/admin/services';
 
   constructor(private http: HttpClient) {}
 

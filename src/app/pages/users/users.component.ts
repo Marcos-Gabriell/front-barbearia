@@ -60,7 +60,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       name: [''],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
-      role: ['STAFF', [Validators.required]]
+      role: ['STAFF', [Validators.required]],
+      active: [true]
     });
   }
 
@@ -127,7 +128,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.form.get('name')?.updateValueAndValidity();
     
     const defaultRole = (this.availableRoles.length === 1) ? this.availableRoles[0] : 'STAFF';
-    this.form.reset({ role: defaultRole });
+    this.form.reset({ role: defaultRole, active: true });
 
     this.showFormModal = true;
     this.emailSuggestions = [];
@@ -144,7 +145,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.form.patchValue({
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      active: user.active
     });
     this.showFormModal = true;
     this.emailSuggestions = [];
@@ -155,6 +157,11 @@ export class UsersComponent implements OnInit, OnDestroy {
     if (this.form.invalid) return;
 
     const req = this.form.value;
+    const payload = {
+      name: req.name,
+      email: req.email,
+      role: req.role
+    };
 
     if (this.isEditing && this.selectedUser) {
       if (req.name === this.selectedUser.name && 
@@ -164,7 +171,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       }
 
       this.isLoading = true;
-      this.userService.update(this.selectedUser.id, req).subscribe({
+      this.userService.update(this.selectedUser.id, payload).subscribe({
         next: () => {
           this.loadUsers();
           this.showFormModal = false;
@@ -246,6 +253,13 @@ export class UsersComponent implements OnInit, OnDestroy {
   get totalPages(): number { return Math.ceil(this.users.length / this.itemsPerPage) || 1; }
 
   changePage(page: number) { if (page >= 1 && page <= this.totalPages) this.currentPage = page; }
+
+  closeModal() { this.closeModals(); }
+  submitForm() { this.onSubmit(); }
+  onEmailInput(event: Event) {
+    this.handleEmailSuggestions((event.target as HTMLInputElement | null)?.value ?? '');
+  }
+  confirmReset() { this.confirmResetPass(); }
 
   loadUsers() {
     this.isLoading = true;

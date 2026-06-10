@@ -31,7 +31,7 @@ export interface ChangePasswordRequest {
 @Injectable({ providedIn: 'root' })
 export class UserService {
 
-  private readonly BASE_URL = 'http://localhost:8080/api';
+  private readonly BASE_URL = 'https://api.falcaobarbearia.com.br/api';
 
   constructor(private http: HttpClient) {}
 

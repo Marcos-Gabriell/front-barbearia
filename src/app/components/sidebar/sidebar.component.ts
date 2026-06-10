@@ -1,9 +1,10 @@
-import { Component, OnInit, Input, Output, EventEmitter, inject } from '@angular/core'; 
+import { Component, OnInit, Input, Output, EventEmitter, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
 import { RouterModule, Router } from '@angular/router'; 
  
 import { UserService } from '../../core/services/users/user.service';  
 import { AuthService } from '../../core/services/auth/auth.service'; 
+import { TokenService } from '../../core/services/auth/token.service';
 import { CurrentUserService } from '../../core/services/users/current-user.service'; 
 import { ThemeService } from '../../core/services/theme/theme.service';  
  
@@ -19,6 +20,7 @@ export class SidebarComponent implements OnInit {
   private router = inject(Router); 
   private userService = inject(UserService); 
   private authService = inject(AuthService); 
+  private tokenService = inject(TokenService);
    
   public currentUserService = inject(CurrentUserService); 
   public themeService = inject(ThemeService);  
@@ -30,20 +32,28 @@ export class SidebarComponent implements OnInit {
   showLogoutModal = false; 
   appVersion = '1.0.0'; 
  
-  currentUser = this.currentUserService.currentUser; 
+  currentUser = this.currentUserService.currentUser;
+  logoSrc = computed(() => this.themeService.isDark() ? '/logo1.png' : '/logo2.png'); 
  
   menuItems = [ 
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard', roles: [] }, 
-       { icon: 'appointments', label: 'Agendamentos', route: '/agendamentos', roles: [] },
+    { icon: 'finance', label: 'Financeiro', route: '/financeiro', roles: ['DEV', 'ADMIN'] }, 
+    { icon: 'appointments', label: 'Agendamentos', route: '/agendamentos', roles: [] },
     { icon: 'catalog', label: 'Catálogo', route: '/catalogo', roles: ['DEV', 'ADMIN'] }, 
     { icon: 'agenda', label: 'Agenda', route: '/agenda', roles: ['DEV', 'ADMIN'] }, 
-    { icon: 'finance', label: 'Financeiro', route: '/financeiro', roles: [] }, 
+    { icon: 'clients', label: 'Clientes', route: '/clientes', roles: ['DEV', 'ADMIN'] },
     { icon: 'users', label: 'Usuários', route: '/usuarios', roles: ['DEV', 'ADMIN'] }, 
   ]; 
  
   filteredMenuItems: any[] = []; 
  
   ngOnInit(): void { 
+    if (!this.hasValidSession()) {
+      this.currentUserService.setUser(null);
+      this.filterMenuByRole('');
+      return;
+    }
+
     if (!this.currentUser()) { 
       this.loadUserProfile(); 
     } else { 
@@ -52,16 +62,28 @@ export class SidebarComponent implements OnInit {
   } 
  
   loadUserProfile() { 
+    if (!this.hasValidSession()) {
+      this.currentUserService.setUser(null);
+      this.filterMenuByRole('');
+      return;
+    }
+
     this.userService.getProfile().subscribe({ 
       next: (user) => { 
         this.currentUserService.setUser(user); 
         this.filterMenuByRole(user.role); 
       }, 
-      error: (err) => { 
-        console.error('Erro sidebar:', err); 
+      error: () => { 
+        this.currentUserService.setUser(null);
+        this.filterMenuByRole('');
       } 
     }); 
   } 
+
+  private hasValidSession(): boolean {
+    const access = this.tokenService.getAccess();
+    return !!access && !this.tokenService.isExpired(access);
+  }
  
   filterMenuByRole(role: string) { 
     this.filteredMenuItems = this.menuItems.filter(item =>  

@@ -12,7 +12,8 @@ import {
   ChevronDown,
   Plus,
   Trash2,
-  X
+  X,
+  Search
 } from 'lucide-angular';
 
 type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
@@ -30,7 +31,7 @@ export class AvailabilityComponent implements OnInit {
   private router = inject(Router);
   private toastService = inject(ToastService);
 
-  readonly icons = { ChevronDown, Plus, Trash2, X };
+  readonly icons = { ChevronDown, Plus, Trash2, X, Search };
 
   professionals = signal<Professional[]>([]);
   loading = signal(false);
@@ -41,21 +42,48 @@ export class AvailabilityComponent implements OnInit {
   currentPage = signal(1);
   itemsPerPage = 4;
 
-  professionalsPaginated = computed(() => {
+  // --- LÓGICA DE BUSCA ---
+  searchTerm = signal<string>('');
+
+  filteredProfessionals = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
     const allPros = this.professionals();
+    
+    if (!term) return allPros;
+    
+    return allPros.filter(p => 
+      (p.name || '').toLowerCase().includes(term) || 
+      (p.email || '').toLowerCase().includes(term)
+    );
+  });
+
+  onSearch(event: any) {
+    this.searchTerm.set(event.target.value);
+    this.currentPage.set(1); 
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+  }
+
+  // --- PAGINAÇÃO COM BASE NA BUSCA ---
+  professionalsPaginated = computed(() => {
+    const list = this.filteredProfessionals();
     const page = this.currentPage();
     const start = (page - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
-    return allPros.slice(start, end);
+    return list.slice(start, end);
   });
 
   totalPages = computed(() => {
-    return Math.ceil(this.professionals().length / this.itemsPerPage);
+    return Math.max(1, Math.ceil(this.filteredProfessionals().length / this.itemsPerPage));
   });
 
   hasPrevPage = computed(() => this.currentPage() > 1);
   hasNextPage = computed(() => this.currentPage() < this.totalPages());
 
+  // --- MODAIS ---
   showSuccessModal = signal(false);
   successTitle = signal('');
   successMessage = signal('');

@@ -1,0 +1,474 @@
+<div class="fin-wrap fade-in">
+
+  <header class="page-header">
+    <div>
+      <h1>Financeiro</h1>
+      <p>Receita, despesas e desempenho</p>
+    </div>
+    <button class="btn-primary rounded" (click)="openCreate()">
+      <lucide-icon [name]="icons.Plus" [size]="16"></lucide-icon> Novo lançamento
+    </button>
+  </header>
+
+  <div class="period-bar">
+    <button *ngFor="let p of periods" class="period-pill"
+      [class.active]="activePeriod() === p.value"
+      (click)="setPeriod(p.value)">{{ p.label }}</button>
+
+    <div class="custom-range" *ngIf="activePeriod() === 'custom'">
+      <input type="date" [(ngModel)]="customFrom">
+      <span>até</span>
+      <input type="date" [(ngModel)]="customTo" (change)="applyCustom()">
+    </div>
+  </div>
+
+  <div class="loading-row" *ngIf="loading()">
+    <div class="spin"></div><span>Carregando...</span>
+  </div>
+
+  <ng-container *ngIf="!loading() && data() as d">
+
+    <section class="kpi-row">
+      <div class="kpi kpi--green">
+        <div class="kpi__icon"><lucide-icon [name]="icons.TrendingUp" [size]="22"></lucide-icon></div>
+        <div class="kpi__body">
+          <span class="kpi__label">Receita total</span>
+          <b class="kpi__val">{{ fmtCurrency(d.totalRevenue) }}</b>
+          <span class="kpi__sub">Agend: {{ fmtCurrency(d.appointmentsRevenue) }} · Manual: {{ fmtCurrency(d.manualIncome) }}</span>
+        </div>
+      </div>
+
+      <div class="kpi kpi--red">
+        <div class="kpi__icon"><lucide-icon [name]="icons.TrendingDown" [size]="22"></lucide-icon></div>
+        <div class="kpi__body">
+          <span class="kpi__label">Despesas</span>
+          <b class="kpi__val">{{ fmtCurrency(d.totalExpense) }}</b>
+          <span class="kpi__sub">Saídas manuais do período</span>
+        </div>
+      </div>
+
+      <div class="kpi" [class.kpi--purple]="d.netProfit >= 0" [class.kpi--red]="d.netProfit < 0">
+        <div class="kpi__icon"><lucide-icon [name]="icons.DollarSign" [size]="22"></lucide-icon></div>
+        <div class="kpi__body">
+          <span class="kpi__label">Lucro líquido</span>
+          <b class="kpi__val" [class.positive]="d.netProfit >= 0" [class.negative]="d.netProfit < 0">
+            {{ fmtCurrency(d.netProfit) }}
+          </b>
+          <span class="kpi__sub">Receita − Despesas</span>
+        </div>
+      </div>
+
+      <div class="kpi kpi--blue">
+        <div class="kpi__icon"><lucide-icon [name]="icons.BarChart2" [size]="22"></lucide-icon></div>
+        <div class="kpi__body">
+          <span class="kpi__label">Ticket médio</span>
+          <b class="kpi__val">{{ fmtCurrency(d.averageTicket) }}</b>
+          <span class="kpi__sub">{{ d.confirmedCount }} confirmados · {{ confirmationRate() }}% taxa</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="tab-bar">
+      <button class="tab-btn" [class.active]="activeTab() === 'resumo'"       (click)="onTabChange('resumo')">
+        <lucide-icon [name]="icons.BarChart2"       [size]="14"></lucide-icon> Resumo
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'agendamentos'" (click)="onTabChange('agendamentos')">
+        <lucide-icon [name]="icons.Users"           [size]="14"></lucide-icon> Por barbeiro/serviço
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'lancamentos'"  (click)="onTabChange('lancamentos')">
+        <lucide-icon [name]="icons.ArrowUpCircle"   [size]="14"></lucide-icon> Lançamentos manuais
+      </button>
+    </div>
+
+    <!-- ABA RESUMO -->
+    <ng-container *ngIf="activeTab() === 'resumo'">
+      <div class="resumo-grid">
+
+        <div class="card">
+          <div class="card__head"><h3>Composição da receita</h3></div>
+          <div class="comp-item">
+            <span class="comp-label">Agendamentos</span>
+            <div class="comp-bar">
+              <div class="comp-fill comp-fill--green"
+                [style.width.%]="d.totalRevenue > 0 ? (d.appointmentsRevenue / d.totalRevenue) * 100 : 0">
+              </div>
+            </div>
+            <span class="comp-val">{{ fmtCurrency(d.appointmentsRevenue) }}</span>
+          </div>
+          <div class="comp-item">
+            <span class="comp-label">Entradas manuais</span>
+            <div class="comp-bar">
+              <div class="comp-fill comp-fill--blue"
+                [style.width.%]="d.totalRevenue > 0 ? (d.manualIncome / d.totalRevenue) * 100 : 0">
+              </div>
+            </div>
+            <span class="comp-val">{{ fmtCurrency(d.manualIncome) }}</span>
+          </div>
+          <div class="comp-item">
+            <span class="comp-label" style="color:#ef4444">Despesas (saídas)</span>
+            <div class="comp-bar">
+              <div class="comp-fill comp-fill--red"
+                [style.width.%]="d.totalRevenue > 0 ? (d.totalExpense / d.totalRevenue) * 100 : 0">
+              </div>
+            </div>
+            <span class="comp-val" style="color:#ef4444">{{ fmtCurrency(d.totalExpense) }}</span>
+          </div>
+          <div class="comp-divider"></div>
+          <div class="comp-item">
+            <span class="comp-label" style="font-weight:700">Lucro líquido</span>
+            <span></span>
+            <b [class.positive]="d.netProfit>=0" [class.negative]="d.netProfit<0">
+              {{ fmtCurrency(d.netProfit) }}
+            </b>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><h3>Agendamentos do período</h3></div>
+          <div class="status-list">
+            <div class="status-row status-row--green">
+              <lucide-icon [name]="icons.CheckCircle" [size]="16"></lucide-icon>
+              <span>Confirmados</span>
+              <b>{{ d.confirmedCount }}</b>
+            </div>
+            <div class="status-row status-row--red">
+              <lucide-icon [name]="icons.AlertCircle" [size]="16"></lucide-icon>
+              <span>No-show</span>
+              <b>{{ d.noShowCount }}</b>
+            </div>
+            <div class="status-row status-row--gray">
+              <lucide-icon [name]="icons.X" [size]="16"></lucide-icon>
+              <span>Cancelados</span>
+              <b>{{ d.canceledCount }}</b>
+            </div>
+            <div class="comp-divider"></div>
+            <div class="status-row">
+              <lucide-icon [name]="icons.Calendar" [size]="16"></lucide-icon>
+              <span>Total</span>
+              <b>{{ d.totalAppointments }}</b>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Lançamentos na Resumo (Apenas top 3) -->
+      <div class="card lancamentos-card">
+        <div class="card__head">
+          <h3>Últimos lançamentos manuais</h3>
+          <button class="link-btn" *ngIf="d.recentEntries?.length" (click)="onTabChange('lancamentos')">Ver todos →</button>
+        </div>
+
+        <div class="entry-list" *ngIf="d.recentEntries?.length; else emptyRecent">
+          <!-- Modificado para mostrar apenas os 3 primeiros -->
+          <div class="entry-row" *ngFor="let e of getTop3RecentEntries(d.recentEntries)">
+            <div class="entry-type-icon" [class.income]="e.type==='INCOME'" [class.expense]="e.type==='EXPENSE'">
+              <lucide-icon [name]="e.type==='INCOME' ? icons.ArrowUpCircle : icons.ArrowDownCircle" [size]="16"></lucide-icon>
+            </div>
+            <div class="entry-info">
+              <span class="entry-cat">{{ e.category }}</span>
+              <span class="entry-desc" *ngIf="e.description">{{ e.description }}</span>
+              <span class="entry-meta">{{ fmtDate(e.entryDate) }}
+                <span *ngIf="e.professionalName"> · {{ e.professionalName }}</span>
+                <span *ngIf="e.editedAt" class="edited-badge">editado</span>
+              </span>
+              <span class="entry-author" *ngIf="e.createdByUsername">por {{ e.createdByUsername }}</span>
+            </div>
+            <span class="entry-amount" [class.income]="e.type==='INCOME'" [class.expense]="e.type==='EXPENSE'">
+              {{ e.type === 'INCOME' ? '+' : '-' }}{{ fmtCurrency(e.amount) }}
+            </span>
+            <div class="entry-actions">
+              <button class="icon-btn info" (click)="openDetails(e.id)" title="Ver detalhes">
+                <lucide-icon [name]="icons.Eye" [size]="14"></lucide-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyRecent>
+          <div class="empty-state-small">
+            <span style="font-size:24px;opacity:.4;margin-bottom:8px;">📉</span>
+            <p>Nenhum lançamento manual recente neste período.</p>
+          </div>
+        </ng-template>
+      </div>
+    </ng-container>
+
+    <!-- ABA AGENDAMENTOS POR BARBEIRO -->
+    <ng-container *ngIf="activeTab() === 'agendamentos'">
+      <div class="agend-grid" *ngIf="d.byProfessional?.length || d.byService?.length; else emptyAgend">
+
+        <div class="card" *ngIf="d.byProfessional?.length">
+          <div class="card__head"><h3>Por barbeiro</h3></div>
+          <div class="rank-list">
+            <div class="rank-item" *ngFor="let p of d.byProfessional; let i = index">
+              <span class="rank-pos" [class.gold]="i===0" [class.silver]="i===1" [class.bronze]="i===2">{{ i+1 }}</span>
+              <div class="rank-avatar">{{ p.professionalName.charAt(0) }}</div>
+              <div class="rank-info">
+                <span class="rank-name">{{ p.professionalName }}</span>
+                <div class="rank-bar"><div class="rank-fill" [style.width.%]="rankWidth(p.totalAppointments)"></div></div>
+                <span class="rank-meta">{{ p.confirmedCount }} atend. · {{ p.noShowRate | number:'1.1-1' }}% ns</span>
+              </div>
+              <div class="rank-right">
+                <span class="rank-revenue">{{ fmtCurrency(p.totalRevenue) }}</span>
+                <span class="rank-ticket">ticket: {{ fmtCurrency(p.averageTicket) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" *ngIf="d.byService?.length">
+          <div class="card__head"><h3>Por serviço</h3></div>
+          <div class="rank-list">
+            <div class="rank-item" *ngFor="let s of d.byService; let i = index">
+              <span class="rank-pos" [class.gold]="i===0" [class.silver]="i===1" [class.bronze]="i===2">{{ i+1 }}</span>
+              <div class="rank-info">
+                <span class="rank-name">{{ s.serviceName }}</span>
+                <div class="rank-bar"><div class="rank-fill rank-fill--purple" [style.width.%]="svcWidth(s.totalAppointments)"></div></div>
+              </div>
+              <div class="rank-right">
+                <span class="rank-revenue">{{ fmtCurrency(s.totalRevenue) }}</span>
+                <span class="rank-ticket">{{ s.totalAppointments }}x</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <ng-template #emptyAgend>
+        <div class="empty-state">
+          <span style="font-size:48px;opacity:.4">✂️</span>
+          <p>Nenhum dado de barbeiro ou serviço neste período.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+
+    <!-- ABA LANÇAMENTOS COM PAGINAÇÃO -->
+    <ng-container *ngIf="activeTab() === 'lancamentos'">
+
+      <div class="entry-toolbar lancamentos-toolbar">
+        <div class="type-filter">
+          <button class="type-btn" [class.active]="filterType()==='ALL'"     (click)="setFilter('ALL')">Todos</button>
+          <button class="type-btn income" [class.active]="filterType()==='INCOME'"  (click)="setFilter('INCOME')">Entradas</button>
+          <button class="type-btn expense" [class.active]="filterType()==='EXPENSE'" (click)="setFilter('EXPENSE')">Saídas</button>
+        </div>
+        <button class="btn-primary rounded" (click)="openCreate()">
+          <lucide-icon [name]="icons.Plus" [size]="14"></lucide-icon> Novo
+        </button>
+      </div>
+
+      <div class="card lancamentos-card" style="padding: 0; background: transparent; border: none;">
+        <div class="card" style="margin: 0;" *ngIf="paginatedLancamentos().length; else emptyEntries">
+          <div class="entry-list">
+            <!-- Renderiza os itens paginados -->
+            <div class="entry-row" *ngFor="let e of paginatedLancamentos()">
+              <div class="entry-type-icon" [class.income]="e.type==='INCOME'" [class.expense]="e.type==='EXPENSE'">
+                <lucide-icon [name]="e.type==='INCOME' ? icons.ArrowUpCircle : icons.ArrowDownCircle" [size]="16"></lucide-icon>
+              </div>
+              <div class="entry-info">
+                <span class="entry-cat">{{ e.category }}</span>
+                <span class="entry-desc" *ngIf="e.description">{{ e.description }}</span>
+                <span class="entry-meta">
+                  {{ fmtDate(e.entryDate) }}
+                  <span *ngIf="e.professionalName"> · {{ e.professionalName }}</span>
+                  <span *ngIf="e.editedAt" class="edited-badge" [title]="'Editado por ' + e.editedByUsername">editado</span>
+                </span>
+                <span class="entry-author">por {{ e.createdByUsername }}</span>
+              </div>
+              <span class="entry-amount" [class.income]="e.type==='INCOME'" [class.expense]="e.type==='EXPENSE'">
+                {{ e.type === 'INCOME' ? '+' : '-' }}{{ fmtCurrency(e.amount) }}
+              </span>
+              <div class="entry-actions">
+                <button class="icon-btn info" (click)="openDetails(e.id)" title="Ver detalhes">
+                  <lucide-icon [name]="icons.Eye" [size]="14"></lucide-icon>
+                </button>
+                <ng-container *ngIf="isAdmin()">
+                  <button class="icon-btn edit" [disabled]="(e.editCount ?? 0) >= 3" (click)="openEdit(e)" [title]="(e.editCount ?? 0) >= 3 ? 'Limite de edições atingido' : 'Editar'">
+                    <lucide-icon [name]="icons.Edit2" [size]="14"></lucide-icon>
+                  </button>
+                  <button class="icon-btn delete" (click)="deleteEntry(e.id)" title="Excluir">
+                    <lucide-icon [name]="icons.Trash2" [size]="14"></lucide-icon>
+                  </button>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paginação adicionada -->
+          <div class="pagination" *ngIf="totalLancamentosPages() > 1">
+            <button class="pg-btn" (click)="prevLancamentosPage()" [disabled]="lancamentosPage() === 0">
+              <lucide-icon [name]="icons.ChevronLeft" [size]="16"></lucide-icon>
+            </button>
+            <span class="pg-info">{{ lancamentosPage() + 1 }} / {{ totalLancamentosPages() }}</span>
+            <button class="pg-btn" (click)="nextLancamentosPage()" [disabled]="lancamentosPage() >= totalLancamentosPages() - 1">
+              <lucide-icon [name]="icons.ChevronRight" [size]="16"></lucide-icon>
+            </button>
+          </div>
+
+        </div>
+        
+        <ng-template #emptyEntries>
+          <div class="empty-state">
+            <span style="font-size:48px;opacity:.4">💸</span>
+            <p>Nenhum lançamento financeiro neste período ou filtro.</p>
+            <button class="btn-primary rounded" style="margin-top: 8px;" (click)="openCreate()">Criar primeiro lançamento</button>
+          </div>
+        </ng-template>
+      </div>
+    </ng-container>
+
+  </ng-container>
+
+</div>
+
+<div class="modal-overlay" *ngIf="showModal()">
+  <div class="modal-card fade-in-up" [formGroup]="entryForm">
+    <div class="modal-header">
+      <h2>{{ editingId() ? 'Editar lançamento' : 'Novo lançamento' }}</h2>
+      <button class="close-circle" (click)="showModal.set(false)">
+        <lucide-icon [name]="icons.X" [size]="16"></lucide-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="type-toggle" [style.opacity]="editingId() ? '0.6' : '1'">
+        <button type="button" class="type-toggle-btn" [class.income]="entryForm.get('type')?.value==='INCOME'"
+          [disabled]="editingId() !== null"
+          (click)="editingId() === null && entryForm.patchValue({type:'INCOME'})">
+          <lucide-icon [name]="icons.ArrowUpCircle" [size]="16"></lucide-icon> Entrada
+        </button>
+        <button type="button" class="type-toggle-btn" [class.expense]="entryForm.get('type')?.value==='EXPENSE'"
+          [disabled]="editingId() !== null"
+          (click)="editingId() === null && entryForm.patchValue({type:'EXPENSE'})">
+          <lucide-icon [name]="icons.ArrowDownCircle" [size]="16"></lucide-icon> Saída
+        </button>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Categoria</label>
+          <select class="inp" formControlName="category">
+            <option value="">Selecione</option>
+            <option *ngFor="let c of categories()" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+        <div class="form-group" *ngIf="showOtherField()">
+          <label>Qual categoria?</label>
+          <input class="inp" type="text" formControlName="otherCategory" placeholder="Descreva a categoria">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Descrição <span class="opt">(opcional)</span></label>
+        <input class="inp" type="text" formControlName="description" placeholder="Ex: Corte do cliente sem agendamento">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Valor</label>
+          <input class="inp" type="text" 
+                 placeholder="R$ 0,00" 
+                 [value]="getFormattedAmount()"
+                 (input)="onCurrencyInput($event)">
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input class="inp" type="date" formControlName="entryDate">
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="showModal.set(false)">Cancelar</button>
+      <button class="btn-primary rounded" [disabled]="saving() || entryForm.invalid" (click)="saveEntry()">
+        {{ saving() ? 'Salvando...' : (editingId() ? 'Salvar' : 'Criar') }}
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Modal de Detalhes -->
+<div class="modal-overlay" *ngIf="viewingEntry() as v">
+  <div class="modal-card fade-in-up">
+    <div class="modal-header">
+      <h2>Detalhes do Lançamento</h2>
+      <button class="close-circle" (click)="closeDetails()">
+        <lucide-icon [name]="icons.X" [size]="16"></lucide-icon>
+      </button>
+    </div>
+    <div class="modal-body details-body">
+      
+      <div class="detail-header" [class.income]="v.type === 'INCOME'" [class.expense]="v.type === 'EXPENSE'">
+        <div class="detail-icon">
+          <lucide-icon [name]="v.type === 'INCOME' ? icons.ArrowUpCircle : icons.ArrowDownCircle" [size]="24"></lucide-icon>
+        </div>
+        <div class="detail-title">
+          <span class="detail-type">{{ v.type === 'INCOME' ? 'Entrada' : 'Saída' }}</span>
+          <h3 style="margin: 0;">{{ fmtCurrency(v.amount) }}</h3>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span>Categoria</span>
+          <b>{{ v.category }}</b>
+        </div>
+        <div class="detail-item">
+          <span>Data de Referência</span>
+          <b>{{ fmtDate(v.entryDate) }}</b>
+        </div>
+        <div class="detail-item" *ngIf="v.description">
+          <span>Descrição</span>
+          <b>{{ v.description }}</b>
+        </div>
+        <div class="detail-item" *ngIf="v.professionalName">
+          <span>Profissional</span>
+          <b>{{ v.professionalName }}</b>
+        </div>
+      </div>
+
+      <!-- Nova Caixa Amarela de Autoria (Auditoria) -->
+      <div class="audit-box">
+        <div class="audit-icon">
+          <lucide-icon [name]="icons.Info" [size]="20"></lucide-icon>
+        </div>
+        <div class="audit-info">
+          <span class="audit-title">Dados de Autoria</span>
+          <span class="audit-desc">Lançamento registrado por <b>{{ v.createdByUsername }}</b></span>
+          <!-- Se o seu backend retornar a data exata de criação (ex: createdAt), troque v.entryDate por v.createdAt -->
+          <span class="audit-date">Criado no sistema em: <b>{{ fmtDate(v.createdAt || v.entryDate) }}</b></span>
+        </div>
+      </div>
+
+      <div class="history-box" *ngIf="(v.editCount ?? 0) > 0">
+        <h4><lucide-icon [name]="icons.Edit2" [size]="14"></lucide-icon> Histórico de Edições ({{ v.editCount }}/3)</h4>
+        <div class="history-list">
+          <div class="history-item fade-in" *ngFor="let line of formatHistory(v.editHistory)">
+            {{ line }}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showSuccessModal()">
+  <div class="modal-card small-modal fade-in-up">
+    <div class="modal-body text-center" style="padding-top: 30px; padding-bottom: 30px;">
+      <div class="success-checkmark-anim">
+        <div class="check-icon">
+          <span class="icon-line line-tip"></span>
+          <span class="icon-line line-long"></span>
+          <div class="icon-circle"></div>
+          <div class="icon-fix"></div>
+        </div>
+      </div>
+      <h3 style="margin-top: 16px; color: var(--text-main);">Sucesso!</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px; line-height: 1.5;">{{ successMessage() }}</p>
+      <div class="action-buttons-center" style="margin-top: 24px;">
+        <button class="btn-primary rounded-pill full-width" (click)="showSuccessModal.set(false)">OK, Entendi</button>
+      </div>
+    </div>
+  </div>
+</div>

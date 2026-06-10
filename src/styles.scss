@@ -92,3 +92,112 @@ input[type="password"]::-ms-clear {
 input[type="password"]::-ms-clear {
   display: none !important;
 }
+
+/* ── Cole no final do src/styles.scss ────────────────────────────────────────
+   Garante que TODOS os modais da aplicação nunca colem nas bordas no mobile  */
+
+/* Modal overlay universal */
+.modal-overlay {
+  padding: 12px !important;    /* distância mínima das bordas */
+}
+
+/* Modal card universal — nunca maior que a tela */
+.modal-card,
+.modal-box,
+.modal-schedule {
+  max-width: min(460px, calc(100vw - 24px)) !important;
+  max-height: calc(100dvh - 24px) !important;
+  overflow-y: auto;
+}
+
+/* Modal grande (agenda) */
+.modal-schedule {
+  max-width: min(700px, calc(100vw - 24px)) !important;
+}
+
+/* ── Avatar com foto no sidebar/perfil ─────────────────── */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* ── Logo responsiva ao tema ───────────────────────────── */
+.logo-full {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ════════════════════════════════════════════════════════════
+   AVATAR GLOBAL — funciona em toda a aplicação
+   Cole no final de src/styles.scss
+════════════════════════════════════════════════════════════ */
+
+/* Avatar base — qualquer div com .avatar-circle ou variante */
+.avatar-circle,
+.avatar-circle-sm,
+.avatar-circle-md,
+.avatar-circle-lg,
+.avatar-large,
+.avatar-circle-xl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  user-select: none;
+  overflow: hidden;
+  /* Garante que só a PRIMEIRA letra apareça corretamente em qualquer tamanho */
+  font-size: clamp(12px, 40%, 22px);
+}
+
+/* Foto de perfil — substitui o avatar quando presente */
+.avatar-photo-sm,
+.avatar-photo-md,
+.avatar-photo-lg,
+.avatar-photo-xl {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+}
+
+.avatar-photo-sm  { width: 40px; height: 40px; border: 2px solid var(--border-color); }
+.avatar-photo-md  { width: 48px; height: 48px; border: 2px solid var(--border-color); }
+.avatar-photo-lg  { width: 64px; height: 64px; border: 3px solid var(--border-color); }
+.avatar-photo-xl  { width: 80px; height: 80px; border: 3px solid var(--border-color); }
+
+/* Avatar wrap com overlay de câmera */
+.avatar-photo-wrap {
+  position: relative;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.avatar-camera-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .2s;
+  color: #fff;
+  pointer-events: none;
+}
+
+.avatar-photo-wrap:hover .avatar-camera-overlay {
+  opacity: 1;
+}
+
+/* Input file invisível */
+.hidden-file-input {
+  display: none !important;
+}

@@ -1,0 +1,164 @@
+<div class="page-container fade-in">
+
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Clientes</h1>
+      <p>Histórico e dados dos clientes da barbearia</p>
+    </div>
+    <div class="header-badge" *ngIf="!loading()">
+      {{ filteredClients().length }} cliente(s)
+    </div>
+  </header>
+
+  <div class="search-bar animate-up">
+    <div class="search-input-wrap">
+      <lucide-icon [name]="icons.Search" [size]="18" class="search-icon"></lucide-icon>
+      <input class="search-input" type="text" placeholder="Buscar por nome, e-mail ou telefone..."
+        [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)">
+      <button class="search-clear" *ngIf="searchQuery()" (click)="clearSearch()">
+        <lucide-icon [name]="icons.X" [size]="16"></lucide-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()">
+    <div class="spinner"></div>
+    <p>Carregando clientes...</p>
+  </div>
+
+  <div class="empty-state animate-up" *ngIf="!loading() && filteredClients().length === 0">
+    <lucide-icon [name]="icons.User" [size]="48" style="opacity: 0.3; margin-bottom: 12px;"></lucide-icon>
+    <h3>Nenhum cliente encontrado</h3>
+    <p>Tente buscar por outro termo.</p>
+  </div>
+
+  <div class="clients-grid" *ngIf="!loading() && filteredClients().length > 0">
+    <div class="client-card stagger-in" *ngFor="let c of pagedClients(); let i = index" [style.animation-delay.ms]="i * 40">
+      
+      <div class="card-top">
+        <div class="avatar">{{ getInitial(c.name) }}</div>
+        <div class="info">
+          <h3 class="text-truncate">{{ c.name }}</h3>
+          <span class="info-line email text-truncate">
+            <lucide-icon [name]="icons.Mail" [size]="12"></lucide-icon> {{ c.email }}
+          </span>
+          <span class="info-line">
+            <lucide-icon [name]="icons.Phone" [size]="12"></lucide-icon> {{ formatPhone(c.phone) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card-stats">
+        <div class="stat-box">
+          <span class="stat-lbl">Visitas</span>
+          <span class="stat-val">{{ c.totalAppointments }}</span>
+        </div>
+        <div class="stat-box right">
+          <span class="stat-lbl">Última Visita</span>
+          <span class="stat-val">{{ fmtDate(c.lastAppointmentAt) }}</span>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-history" (click)="openHistory(c)">
+          <lucide-icon [name]="icons.History" [size]="16"></lucide-icon>
+          Ver Detalhes e Histórico
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pagination" *ngIf="clientTotalPages() > 1 && !loading()">
+    <button class="pg-btn" (click)="clientPrevPage()" [disabled]="clientPage() === 0">
+      <lucide-icon [name]="icons.ChevronLeft" [size]="18"></lucide-icon>
+    </button>
+    <span class="pg-info">{{ clientPage() + 1 }} de {{ clientTotalPages() }}</span>
+    <button class="pg-btn" (click)="clientNextPage()" [disabled]="clientPage() >= clientTotalPages() - 1">
+      <lucide-icon [name]="icons.ChevronRight" [size]="18"></lucide-icon>
+    </button>
+  </div>
+
+</div>
+
+<div class="modal-overlay" *ngIf="showHistory()">
+  <div class="modal-card fade-in-up">
+    
+    <div class="modal-header">
+      <div class="modal-title-stack">
+        <h2>Detalhes do Cliente</h2>
+      </div>
+      <button class="btn-close-circle" (click)="closeHistory()">
+        <lucide-icon [name]="icons.X" [size]="18"></lucide-icon>
+      </button>
+    </div>
+
+   <div class="modal-client-info" *ngIf="selectedClient() as c">
+      <div class="avatar-lg">{{ getInitial(c.name) }}</div>
+      <div class="info-lg">
+        <h3>{{ c.name }}</h3>
+        
+        <div class="contact-badges">
+          <span class="badge"><lucide-icon [name]="icons.Mail" [size]="12"></lucide-icon> {{ c.email }}</span>
+          <span class="badge" *ngIf="c.phone"><lucide-icon [name]="icons.Phone" [size]="12"></lucide-icon> {{ formatPhone(c.phone) }}</span>
+        </div>
+        
+        <div class="stats-row">
+          <div class="s-item"><span>Cliente Desde</span> <b>{{ fmtDate(c.lastAppointmentAt) }}</b></div>
+          <div class="s-item"><span>Total Visitas</span> <b>{{ c.totalAppointments }}</b></div>
+          <div class="s-item"><span>Última Visita</span> <b>{{ fmtDate(c.lastAppointmentAt) }}</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="history-filters">
+      <button class="filter-pill" [class.active]="historyFilter() === 'ALL'" (click)="setHistoryFilter('ALL')">Todos</button>
+      <button class="filter-pill confirmed" [class.active]="historyFilter() === 'CONFIRMED'" (click)="setHistoryFilter('CONFIRMED')">Confirmados</button>
+      <button class="filter-pill pending" [class.active]="historyFilter() === 'PENDING'" (click)="setHistoryFilter('PENDING')">Pendentes</button>
+      <button class="filter-pill cancelled" [class.active]="historyFilter() === 'CANCELLED'" (click)="setHistoryFilter('CANCELLED')">Cancelados</button>
+      <button class="filter-pill noshow" [class.active]="historyFilter() === 'NO_SHOW'" (click)="setHistoryFilter('NO_SHOW')">No-Show</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="loading-state" *ngIf="loadingHistory()">
+        <div class="spinner"></div>
+      </div>
+
+      <div *ngIf="!loadingHistory()">
+        <div class="history-list">
+          <div class="history-item fade-in" *ngFor="let a of historyPaged()" [class]="'history-item--' + getStatusClass(a.status)">
+            <div class="history-item__date">
+              <b>{{ fmtDatetime(a.startAt).split(' ')[0] }}</b>
+              <span>{{ fmtDatetime(a.startAt).split(' ')[1] }}</span>
+            </div>
+            <div class="history-item__body">
+              <span class="history-item__service">{{ a.serviceName }}</span>
+              <span class="history-item__prof">com {{ a.professionalName }} · {{ a.durationMinutes }}min</span>
+            </div>
+            <span class="status-pill status-pill--{{ getStatusClass(a.status) }}">
+              {{ getStatusLabel(a.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="empty-state empty-state--sm" *ngIf="filteredHistory().length === 0">
+          <lucide-icon [name]="icons.History" [size]="32" style="opacity: 0.4; margin-bottom: 8px;"></lucide-icon>
+          <span>Nenhum agendamento encontrado para este filtro.</span>
+        </div>
+
+        <div class="history-pagination" *ngIf="historyTotalPages() > 1">
+          <button class="pg-btn sm" [disabled]="historyPage() === 0" (click)="historyPrevPage()">
+            <lucide-icon [name]="icons.ChevronLeft" [size]="16"></lucide-icon>
+          </button>
+          <span class="pg-info">{{ historyPage() + 1 }} de {{ historyTotalPages() }}</span>
+          <button class="pg-btn sm" [disabled]="historyPage() >= historyTotalPages() - 1" (click)="historyNextPage()">
+            <lucide-icon [name]="icons.ChevronRight" [size]="16"></lucide-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeHistory()">Fechar</button>
+    </div>
+  </div>
+</div>

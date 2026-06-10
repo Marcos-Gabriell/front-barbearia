@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router'; 
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,12 +15,13 @@ import { TokenService } from '../../core/services/auth/token.service';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private toast = inject(ToastService);
-  private authService = inject(AuthService);
+  private fb         = inject(FormBuilder);
+  private toast      = inject(ToastService);
+  private authService  = inject(AuthService);
   private tokenService = inject(TokenService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute); 
+  private router     = inject(Router);
+  private route      = inject(ActivatedRoute);
+  private platformId = inject(PLATFORM_ID); // ← FIX
 
   isLoading = false;
   showPassword = false;
@@ -34,15 +35,17 @@ export class LoginComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    const savedEmail = localStorage.getItem('remembered_email');
-    if (savedEmail) {
-      this.form.patchValue({ email: savedEmail, rememberMe: true });
+    // ← FIX: só acessa localStorage no browser, não no SSR
+    if (isPlatformBrowser(this.platformId)) {
+      const savedEmail = localStorage.getItem('remembered_email');
+      if (savedEmail) {
+        this.form.patchValue({ email: savedEmail, rememberMe: true });
+      }
     }
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
   }
 
   togglePassword() { this.showPassword = !this.showPassword; }
-
   openContactModal() { this.showContactModal = true; }
   closeContactModal() { this.showContactModal = false; }
 
@@ -61,7 +64,7 @@ export class LoginComponent implements OnInit {
       next: (response: LoginResponse) => {
         this.isLoading = false;
         
-        const access = response?.data?.token;
+        const access  = response?.data?.token;
         const refresh = response?.data?.refreshToken;
 
         if (!access) {
@@ -72,17 +75,20 @@ export class LoginComponent implements OnInit {
         this.tokenService.setAccess(access);
         if (refresh) this.tokenService.setRefresh(refresh);
 
-        if (rememberMe) {
-          localStorage.setItem('remembered_email', payload.email);
-        } else {
-          localStorage.removeItem('remembered_email');
+        // ← FIX: só acessa localStorage no browser
+        if (isPlatformBrowser(this.platformId)) {
+          if (rememberMe) {
+            localStorage.setItem('remembered_email', payload.email);
+          } else {
+            localStorage.removeItem('remembered_email');
+          }
         }
+
         this.router.navigateByUrl(this.returnUrl);
       },
       error: (err: HttpErrorResponse) => {
         this.isLoading = false;
-        console.error(err);
-        if (err.status === 401 || err.status === 403) {
+        if (err.status === 401 || err.status === 403 || err.status === 500) {
           this.toast.error('E-mail ou senha incorretos.');
         } else if (err.status === 0) {
           this.toast.error('Sem conexão com o servidor.');

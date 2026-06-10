@@ -1,3 +1,5 @@
+// src/app/core/models/user.model.ts
+
 export type UserRole = 'ADMIN' | 'STAFF' | 'DEV';
 
 export interface User {
@@ -7,9 +9,10 @@ export interface User {
   phone?: string;
   role: string;
   active: boolean;
+  photoUrl?: string | null;    // campo principal — retornado pelo backend
+  avatarUrl?: string | null;   // alias mantido para compatibilidade
   pendingEmail?: string | null;
   mustChangePassword?: boolean;
-  avatarUrl?: string;
   createdAt: string;
   updatedAt?: string;
 }
