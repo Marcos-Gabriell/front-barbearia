@@ -283,6 +283,6 @@ $bg-body:      var(--bg-body);
   text-align: center; background: $bg-card; border-radius: 16px; border: 1px dashed $border-color;
   h3 { font-size: 16px; color: $text-main; margin: 0 0 4px; }
   p { font-size: 14px; color: $text-muted; margin: 0; }
-  @media (max-width: 768px) { max-width: 90%; margin-left: 0; margin-right: auto; padding: 40px 16px; }
+  @media (max-width: 768px) { max-width: 82%; margin-left: 0; margin-right: auto; padding: 40px 16px; }
 }
 .empty-state--sm { padding: 40px 20px; background: $bg-body; border: none; span { color: $text-muted; font-size: 13px; font-weight: 500; } }
