@@ -43,6 +43,7 @@ export class SidebarComponent implements OnInit {
     { icon: 'agenda', label: 'Agenda', route: '/agenda', roles: ['DEV', 'ADMIN'] }, 
     { icon: 'clients', label: 'Clientes', route: '/clientes', roles: ['DEV', 'ADMIN'] },
     { icon: 'users', label: 'Usuários', route: '/usuarios', roles: ['DEV', 'ADMIN'] }, 
+    { icon: 'logs', label: 'Logs', route: '/logs', roles: ['DEV', 'ADMIN'] },
   ]; 
  
   filteredMenuItems: any[] = []; 

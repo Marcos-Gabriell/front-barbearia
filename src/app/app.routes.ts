@@ -81,6 +81,9 @@ export const routes: Routes = [
       import('./pages/perfil/profile.component').then(m => m.ProfileComponent),
   },
 
+    { path: 'logs',           canActivate: [authGuard, roleGuard(['DEV', 'ADMIN'])],
+    loadComponent: () => import('./pages/logs/logs.component').then(m => m.LogsComponent) },
+
   {
     path: 'forbidden',
     loadComponent: () =>
@@ -92,6 +95,8 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent),
   },
+
+
 
   { path: '**', redirectTo: 'not-found' },
 ];
