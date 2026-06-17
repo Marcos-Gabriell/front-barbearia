@@ -20,7 +20,7 @@ export interface CreateInternalAppointmentRequest {
   startAt: string;
 }
 
-/** Multi-serviço: corte + barba em sequência */
+/** Multi-serviço: corte + barba em sequência — gera UM único agendamento */
 export interface CreateMultiServiceAppointmentRequest {
   clientName: string;
   clientEmail: string;
@@ -99,9 +99,13 @@ export class AppointmentsService {
     return this.http.post<Appointment>(this.adminUrl, payload);
   }
 
-  /** Agendamento multi-serviço (corte + barba em sequência) */
-  createMulti(payload: CreateMultiServiceAppointmentRequest): Observable<Appointment[]> {
-    return this.http.post<Appointment[]>(`${this.adminUrl}/multi`, payload);
+  /**
+   * Agendamento multi-serviço (corte + barba em sequência).
+   * Backend cria UM ÚNICO Appointment com os serviços extras vinculados —
+   * por isso o retorno é Appointment, não Appointment[].
+   */
+  createMulti(payload: CreateMultiServiceAppointmentRequest): Observable<Appointment> {
+    return this.http.post<Appointment>(`${this.adminUrl}/multi`, payload);
   }
 
   /** Reagendamento — altera o horário mantendo código e histórico */

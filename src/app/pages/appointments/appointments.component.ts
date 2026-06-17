@@ -29,8 +29,6 @@ import {
 } from 'lucide-angular';
 
 type Role = 'DEV' | 'ADMIN' | 'ADM' | 'STAFF';
-type WizardMode = 'single' | 'multi';
-
 @Component({
   selector: 'app-appointments',
   standalone: true,
@@ -88,7 +86,6 @@ export class AppointmentsComponent implements OnInit {
   filtersOpen = false;
 
   // ── Wizard ────────────────────────────────────────────────────────────────
-  wizardMode              = signal<WizardMode>('single');
   showNewAppointmentModal = signal(false);
   isSavingAppointment     = signal(false);
   newAppointmentForm!:      FormGroup;
@@ -132,6 +129,9 @@ export class AppointmentsComponent implements OnInit {
   // ── Multi-serviço ─────────────────────────────────────────────────────────
   /** IDs dos serviços selecionados no modo multi, na ordem */
   selectedServiceIds = signal<number[]>([]);
+
+  /** Detecta automaticamente se é agendamento conjunto (2+ serviços) */
+  isMultiSelection = computed(() => this.selectedServiceIds().length > 1);
 
   totalMultiDuration = computed(() => {
     const ids      = this.selectedServiceIds();
@@ -338,8 +338,7 @@ export class AppointmentsComponent implements OnInit {
   //  WIZARD — MODO SINGLE
   // ════════════════════════════════════════════════════════════════════════
 
-  openNewAppointmentModal(mode: WizardMode = 'single') {
-    this.wizardMode.set(mode);
+  openNewAppointmentModal() {
     this.newAppointmentForm.reset({
       clientName: '', clientEmail: '', clientPhone: '',
       serviceId: null, professionalUserId: null, date: ''
@@ -358,8 +357,9 @@ export class AppointmentsComponent implements OnInit {
   nextStep() {
     if (this.canGoNext()) {
       const step = this.currentStep();
-      if (this.wizardMode() === 'single' && step === 2) this.loadProfessionalsForService();
-      if (this.wizardMode() === 'multi'  && step === 2) this.loadMultiProfessionals();
+      if (step === 2) {
+        this.isMultiSelection() ? this.loadMultiProfessionals() : this.loadProfessionalsForService();
+      }
       this.currentStep.set(step + 1);
     }
   }
@@ -370,7 +370,6 @@ export class AppointmentsComponent implements OnInit {
 
   canGoNext(): boolean {
     const step = this.currentStep();
-    const mode = this.wizardMode();
     const f    = this.newAppointmentForm;
 
     if (step === 1) return (
@@ -379,29 +378,14 @@ export class AppointmentsComponent implements OnInit {
       f.get('clientPhone')?.valid === true
     );
 
-    if (mode === 'single') {
-      if (step === 2) return !!f.get('serviceId')?.value;
-      if (step === 3) return !!f.get('professionalUserId')?.value;
-      if (step === 4) return !!f.get('date')?.value && this.selectedSlot() !== null;
-    }
-
-    if (mode === 'multi') {
-      if (step === 2) return this.selectedServiceIds().length >= 2;
-      if (step === 3) return !!f.get('professionalUserId')?.value;
-      if (step === 4) return !!f.get('date')?.value && this.selectedSlot() !== null;
-    }
+    if (step === 2) return this.selectedServiceIds().length >= 1;
+    if (step === 3) return !!f.get('professionalUserId')?.value;
+    if (step === 4) return !!f.get('date')?.value && this.selectedSlot() !== null;
 
     return true;
   }
 
-  selectService(id: number) {
-    this.newAppointmentForm.patchValue({ serviceId: id, professionalUserId: null, date: '' });
-    this.modalProfessionals.set([]);
-    this.availableSlots.set([]);
-    this.selectedSlot.set(null);
-  }
-
-  // ── Multi-serviço helpers ─────────────────────────────────────────────────
+  // ── Seleção de serviços (1 ou mais — detecta conjunto automaticamente) ────
 
   toggleMultiService(id: number) {
     const current = this.selectedServiceIds();
@@ -410,8 +394,14 @@ export class AppointmentsComponent implements OnInit {
     } else if (current.length < 5) {
       this.selectedServiceIds.set([...current, id]);
     }
-    // reset profissional e slots ao mudar seleção
-    this.newAppointmentForm.patchValue({ professionalUserId: null, date: '' });
+    // Mantém compatibilidade com submitSingleAppointment quando só 1 selecionado
+    const updated = this.selectedServiceIds();
+    this.newAppointmentForm.patchValue({
+      serviceId: updated.length === 1 ? updated[0] : null,
+      professionalUserId: null,
+      date: ''
+    });
+    this.modalProfessionals.set([]);
     this.availableSlots.set([]);
     this.selectedSlot.set(null);
   }
@@ -452,13 +442,10 @@ export class AppointmentsComponent implements OnInit {
   }
 
   onDateChange() {
-    const f    = this.newAppointmentForm;
-    const mode = this.wizardMode();
+    const f = this.newAppointmentForm;
     const professionalId = f.get('professionalUserId')?.value;
     const date           = f.get('date')?.value;
-    const serviceId      = mode === 'single'
-      ? f.get('serviceId')?.value
-      : this.selectedServiceIds()[0]; // usa o primeiro serviço para verificar slots
+    const serviceId      = this.selectedServiceIds()[0]; // usa o primeiro serviço para verificar slots
 
     this.availableSlots.set([]);
     this.selectedSlot.set(null);
@@ -491,11 +478,18 @@ export class AppointmentsComponent implements OnInit {
     return ids.map(id => services.find(s => s.id === id)?.name || '').filter(Boolean).join(' + ');
   }
 
+  /** Nome de exibição do agendamento: "Corte" ou "Corte + Barba" se houver extras */
+  getServiceDisplayName(appt: Appointment | null | undefined): string {
+    if (!appt) return '';
+    if (!appt.extraServiceNames?.length) return appt.serviceName;
+    return appt.serviceName + ' + ' + appt.extraServiceNames.join(' + ');
+  }
+
   submitNewAppointment() {
     this.formError.set(null);
     if (!this.canSubmitNewAppointment()) { this.formError.set('Selecione uma data e horário.'); return; }
 
-    if (this.wizardMode() === 'multi') {
+    if (this.isMultiSelection()) {
       this.submitMultiAppointment();
     } else {
       this.submitSingleAppointment();
@@ -506,12 +500,13 @@ export class AppointmentsComponent implements OnInit {
     this.isSavingAppointment.set(true);
     const v    = this.newAppointmentForm.value as any;
     const slot = this.selectedSlot()!;
+    const serviceId = this.selectedServiceIds()[0];
 
     const payload: CreateInternalAppointmentRequest = {
       clientName:         String(v.clientName).trim(),
       clientEmail:        String(v.clientEmail).trim().toLowerCase(),
       clientPhone:        String(v.clientPhone).replace(/\D/g, ''),
-      serviceId:          Number(v.serviceId),
+      serviceId:          Number(serviceId),
       professionalUserId: Number(v.professionalUserId),
       startAt:            `${v.date}T${slot.start}:00`,
     };
@@ -545,21 +540,22 @@ export class AppointmentsComponent implements OnInit {
       startAt:            `${v.date}T${slot.start}:00`,
     };
 
+    // Backend cria UM ÚNICO agendamento com os serviços extras vinculados
     this.api.createMulti(payload).subscribe({
-      next: appts => {
+      next: appt => {
         this.isSavingAppointment.set(false);
         this.closeNewAppointmentModal();
-        const first = appts?.[0];
+        this.successAppointmentId.set(appt.id);
         this.triggerSuccess(
-          `${appts.length} Agendamentos Criados!`,
-          `${this.getMultiSelectedServicesNames()} — iniciando às ${slot.start}`,
-          first
+          'Agendamento Criado!',
+          `Código: ${appt.code} — ${this.getMultiSelectedServicesNames()} às ${slot.start}`,
+          appt
         );
         this.load();
       },
       error: err => {
         this.isSavingAppointment.set(false);
-        this.formError.set(err.error?.message || 'Erro ao criar agendamentos.');
+        this.formError.set(err.error?.message || 'Erro ao criar agendamento.');
       },
     });
   }

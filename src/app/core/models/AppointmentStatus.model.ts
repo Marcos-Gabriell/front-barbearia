@@ -32,6 +32,8 @@ export interface Appointment {
   // Dados do serviço
   serviceId: number;
   serviceName: string;
+  /** Serviços extras de um agendamento conjunto (ex: ["Barba"] quando serviceName = "Corte") */
+  extraServiceNames?: string[];
   durationMinutes: number;
   
   // Dados do profissional

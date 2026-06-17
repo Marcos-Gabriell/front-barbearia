@@ -16,14 +16,12 @@
   <!-- FILTROS MELHORADOS -->
   <div class="filters-wrap animate-up">
 
-    <!-- Pills de período -->
     <div class="period-pills">
       <button *ngFor="let p of periods" class="period-pill"
         [class.active]="activePeriod() === p.value"
         (click)="setPeriod(p.value)">{{ p.label }}</button>
     </div>
 
-    <!-- Linha de filtros -->
     <div class="filters-row">
       <div class="filter-search">
         <lucide-icon [name]="icons.Search" [strokeWidth]="2" class="field-icon"></lucide-icon>
@@ -85,7 +83,7 @@
       </div>
 
       <div class="card-body">
-        <h3 class="service">{{ a.serviceName }}</h3>
+        <h3 class="service">{{ getServiceDisplayName(a) }}</h3>
         <div class="info-row-2">
           <div class="info-line">
             <span class="ico blue"><lucide-icon [name]="icons.User" [strokeWidth]="2"></lucide-icon></span>
@@ -102,11 +100,8 @@
         </div>
       </div>
 
-      <!-- 4 botões com tooltips descritivos -->
       <div class="card-actions">
-        <button class="action-btn view"
-                (click)="openDetails(a)"
-                title="Ver detalhes">
+        <button class="action-btn view" (click)="openDetails(a)" title="Ver detalhes">
           <lucide-icon [name]="icons.Eye" [strokeWidth]="2"></lucide-icon>
         </button>
         <button class="action-btn confirm"
@@ -115,13 +110,18 @@
                 title="Confirmar chegada">
           <lucide-icon [name]="icons.Check" [strokeWidth]="2.5"></lucide-icon>
         </button>
+        <button class="action-btn reschedule"
+                (click)="openReschedule(a)"
+                [disabled]="!canReschedule(a)"
+                title="Reagendar">
+          <lucide-icon [name]="icons.RefreshCw" [strokeWidth]="2"></lucide-icon>
+        </button>
         <button class="action-btn cancel"
                 (click)="openCancel(a)"
                 [disabled]="a.status === 'CANCELLED' || a.status === 'CONFIRMED'"
                 title="Cancelar agendamento">
           <lucide-icon [name]="icons.X" [strokeWidth]="2.5"></lucide-icon>
         </button>
-
       </div>
     </div>
   </div>
@@ -171,7 +171,7 @@
           <span class="field-icon purple"><lucide-icon [name]="icons.Scissors" [strokeWidth]="2"></lucide-icon></span>
           <div class="field-info">
             <span class="label">Serviço</span>
-            <span class="value">{{ selectedAppointment()?.serviceName }}</span>
+            <span class="value">{{ getServiceDisplayName(selectedAppointment()) }}</span>
           </div>
         </div>
         <div class="field-row">
@@ -295,7 +295,7 @@
 </div>
 
 <!-- ================================================
-     MODAL: NOVO AGENDAMENTO (WIZARD)
+     MODAL: NOVO AGENDAMENTO (WIZARD — single ou multi)
      ================================================ -->
 <div class="modal-overlay" *ngIf="showNewAppointmentModal()">
   <div class="modal-card modal-lg scale-in">
@@ -360,13 +360,13 @@
           </div>
         </div>
 
-        <!-- STEP 2: Serviço -->
+        <!-- STEP 2: Serviços (1 ou mais — detecta conjunto automaticamente) -->
         <div class="wizard-step fade-in-up" *ngIf="currentStep() === 2">
           <div class="step-header">
             <span class="step-icon purple"><lucide-icon [name]="icons.Scissors" [strokeWidth]="2"></lucide-icon></span>
             <div class="step-info">
-              <h3>Serviço</h3>
-              <p>Selecione o serviço desejado</p>
+              <h3>Serviços</h3>
+              <p>Selecione um ou mais serviços — ex: corte + barba</p>
             </div>
           </div>
           <div *ngIf="isLoadingServices()" class="inline-loading pulse-in">
@@ -380,35 +380,46 @@
             <div class="option-item stagger-in"
                  *ngFor="let s of availableServices(); let i = index"
                  [style.animation-delay.ms]="i * 30"
-                 [class.selected]="newAppointmentForm.get('serviceId')?.value === s.id"
-                 (click)="selectService(s.id)">
+                 [class.selected]="isMultiServiceSelected(s.id)"
+                 (click)="toggleMultiService(s.id)">
               <span class="opt-icon purple"><lucide-icon [name]="icons.Scissors" [strokeWidth]="2"></lucide-icon></span>
               <div class="opt-content">
                 <span class="opt-name">{{ s.name }}</span>
                 <span class="opt-meta">{{ s.durationMinutes }} min</span>
               </div>
-              <span class="opt-check" *ngIf="newAppointmentForm.get('serviceId')?.value === s.id">
-                <lucide-icon [name]="icons.CheckCircle" [strokeWidth]="2"></lucide-icon>
-              </span>
+              <span class="opt-order" *ngIf="isMultiServiceSelected(s.id)">{{ getMultiServiceOrder(s.id) }}</span>
             </div>
           </div>
+
+          <!-- Resumo da seleção múltipla -->
+          <div class="multi-summary fade-in" *ngIf="selectedServiceIds().length > 0">
+            <div class="multi-summary__row">
+              <span class="multi-summary__label">{{ selectedServiceIds().length }} serviço(s) selecionado(s)</span>
+              <span class="multi-summary__duration">
+                <lucide-icon [name]="icons.Clock" [size]="13"></lucide-icon>
+                {{ totalMultiDuration() }} min total
+              </span>
+            </div>
+            <span class="multi-summary__names">{{ getMultiSelectedServicesNames() }}</span>
+          </div>
+
         </div>
 
-        <!-- STEP 3: Profissional -->
+        <!-- STEP 3: Profissional (single ou multi) -->
         <div class="wizard-step fade-in-up" *ngIf="currentStep() === 3">
           <div class="step-header">
             <span class="step-icon green"><lucide-icon [name]="icons.UserCheck" [strokeWidth]="2"></lucide-icon></span>
             <div class="step-info">
               <h3>Profissional</h3>
-              <p>Quem vai atender</p>
+              <p>{{ isMultiSelection() ? 'Quem atende todos os serviços escolhidos' : 'Quem vai atender' }}</p>
             </div>
           </div>
           <div *ngIf="isLoadingProfessionals()" class="inline-loading pulse-in">
             <div class="spinner-sm"></div><span>Buscando...</span>
           </div>
-          <div *ngIf="!isLoadingProfessionals() && modalProfessionals().length === 0" class="inline-empty fade-in">
+          <div *ngIf="!isLoadingProfessionals() && modalProfessionals().length === 0" class="inline-empty inline-empty--wrap fade-in">
             <lucide-icon [name]="icons.AlertCircle" [strokeWidth]="2"></lucide-icon>
-            <span>Nenhum profissional disponível.</span>
+            <span>{{ isMultiSelection() ? 'Nenhum profissional atende todos os serviços escolhidos.' : 'Nenhum profissional disponível.' }}</span>
           </div>
           <div *ngIf="!isLoadingProfessionals() && modalProfessionals().length > 0" class="options-list">
             <div class="option-item professional stagger-in"
@@ -455,23 +466,19 @@
             </div>
           </div>
 
-          <!-- Loading slots -->
           <div *ngIf="newAppointmentForm.get('date')?.value && isLoadingSlots()" class="inline-loading pulse-in">
             <div class="spinner-sm"></div><span>Buscando horários disponíveis...</span>
           </div>
 
-          <!-- Nenhum horário — texto completo sem cortar -->
           <div *ngIf="newAppointmentForm.get('date')?.value && !isLoadingSlots() && availableSlots().length === 0"
                class="inline-empty inline-empty--wrap fade-in">
             <lucide-icon [name]="icons.CalendarX2" [strokeWidth]="2"></lucide-icon>
             <span>Nenhum horário disponível para esta data. Tente outra data.</span>
           </div>
 
-          <!-- Slots -->
           <div class="slots-section slide-down"
                *ngIf="newAppointmentForm.get('date')?.value && !isLoadingSlots() && availableSlots().length > 0">
 
-            <!-- Aviso de seleção obrigatória -->
             <div class="slot-hint" *ngIf="!selectedSlot()">
               <lucide-icon [name]="icons.AlertCircle" [strokeWidth]="2"></lucide-icon>
               <span>Selecione um horário para continuar</span>
@@ -529,9 +536,17 @@
                 <span class="s-label">Telefone</span>
                 <span class="s-value">{{ newAppointmentForm.get('clientPhone')?.value }}</span>
               </div>
-              <div class="summary-item">
+              <div class="summary-item" *ngIf="!isMultiSelection()">
                 <span class="s-label">Serviço</span>
-                <span class="s-value">{{ getSelectedServiceName() }}</span>
+                <span class="s-value">{{ getMultiSelectedServicesNames() }}</span>
+              </div>
+              <div class="summary-item" *ngIf="isMultiSelection()">
+                <span class="s-label">Serviços</span>
+                <span class="s-value">{{ getMultiSelectedServicesNames() }}</span>
+              </div>
+              <div class="summary-item" *ngIf="isMultiSelection()">
+                <span class="s-label">Duração total</span>
+                <span class="s-value">{{ totalMultiDuration() }} min</span>
               </div>
               <div class="summary-item">
                 <span class="s-label">Profissional</span>
@@ -575,6 +590,70 @@
 </div>
 
 <!-- ================================================
+     MODAL: REAGENDAR
+     ================================================ -->
+<div class="modal-overlay" *ngIf="showRescheduleModal()">
+  <div class="modal-card modal-sm fade-in-up">
+    <div class="modal-header">
+      <h2>Reagendar</h2>
+      <button class="close-btn-circle" (click)="closeRescheduleModal()">
+        <lucide-icon [name]="icons.X" [strokeWidth]="2"></lucide-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="cancel-info-box">
+        <span class="code-tag lg">{{ appointmentToReschedule()?.code || '#' + appointmentToReschedule()?.id }}</span>
+        <h4>{{ getServiceDisplayName(appointmentToReschedule()) }}</h4>
+        <p>{{ appointmentToReschedule()?.clientName }}</p>
+        <p>Atual: {{ appointmentToReschedule()?.startAt | date:"dd/MM/yyyy 'às' HH:mm":'America/Sao_Paulo' }}</p>
+      </div>
+
+      <div class="form-field">
+        <label>Nova data *</label>
+        <input type="date" class="fi" [min]="todayDate"
+          [value]="rescheduleDate()"
+          (change)="onRescheduleDateChange($any($event.target).value)">
+      </div>
+
+      <div *ngIf="rescheduleDate() && isLoadingRescheduleSlots()" class="inline-loading pulse-in">
+        <div class="spinner-sm"></div><span>Buscando horários...</span>
+      </div>
+
+      <div *ngIf="rescheduleDate() && !isLoadingRescheduleSlots() && rescheduleSlots().length === 0"
+           class="inline-empty inline-empty--wrap fade-in">
+        <lucide-icon [name]="icons.CalendarX2" [strokeWidth]="2"></lucide-icon>
+        <span>Nenhum horário disponível para esta data.</span>
+      </div>
+
+      <div class="slots-section slide-down" *ngIf="rescheduleDate() && !isLoadingRescheduleSlots() && rescheduleSlots().length > 0">
+        <div class="slots-header">
+          <span>Horários Disponíveis</span>
+          <span class="slots-count">{{ rescheduleSlots().length }}</span>
+        </div>
+        <div class="slots-grid">
+          <button type="button" class="slot-btn stagger-in"
+                  *ngFor="let slot of rescheduleSlots(); let i = index"
+                  [style.animation-delay.ms]="i * 15"
+                  [class.selected]="selectedRescheduleSlot()?.start === slot.start"
+                  (click)="selectedRescheduleSlot.set(slot)">
+            {{ slot.start }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer between">
+      <button type="button" class="btn-ghost" (click)="closeRescheduleModal()">Cancelar</button>
+      <button type="button" class="btn-primary"
+              (click)="confirmReschedule()"
+              [disabled]="!selectedRescheduleSlot() || isRescheduling()">
+        <div *ngIf="isRescheduling()" class="spinner-xs"></div>
+        <span *ngIf="!isRescheduling()">Confirmar Reagendamento</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================
      MODAL: CANCELAR
      ================================================ -->
 <div class="modal-overlay" *ngIf="showCancelModal()">
@@ -588,7 +667,7 @@
     <div class="modal-body">
       <div class="cancel-info-box">
         <span class="code-tag lg">{{ appointmentToCancel()?.code || '#' + appointmentToCancel()?.id }}</span>
-        <h4>{{ appointmentToCancel()?.serviceName }}</h4>
+        <h4>{{ getServiceDisplayName(appointmentToCancel()) }}</h4>
         <p>{{ appointmentToCancel()?.clientName }}</p>
         <p>{{ appointmentToCancel()?.startAt | date:"dd/MM/yyyy 'às' HH:mm":'America/Sao_Paulo' }}</p>
       </div>
@@ -608,6 +687,9 @@
   </div>
 </div>
 
+<!-- ================================================
+     MODAL: SUCESSO
+     ================================================ -->
 <div class="modal-overlay" *ngIf="showSuccessModal()">
   <div class="modal-card small-modal fade-in-up">
     <div class="modal-body text-center" style="padding-top: 30px; padding-bottom: 30px;">

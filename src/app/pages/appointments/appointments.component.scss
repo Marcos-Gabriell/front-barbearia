@@ -873,3 +873,35 @@ $colors: (
 @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulseIn   { 0% { opacity: 0; transform: scale(0.94); } 50% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
 @keyframes staggerIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+// ============================================
+// SELEÇÃO MÚLTIPLA — número de ordem no card
+// ============================================
+.opt-order {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: $accent; color: #fff; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.multi-summary {
+  margin-top: 14px; padding: 12px 14px; border-radius: 10px;
+  background: rgba($accent, 0.06); border: 1px solid rgba($accent, 0.2);
+
+  &__row {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+  }
+  &__label { font-size: 12px; font-weight: 700; color: $text-muted; text-transform: uppercase; }
+  &__duration {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 700; color: $accent;
+    lucide-icon { display: flex; align-items: center; }
+  }
+  &__names { display: block; font-size: 13.5px; font-weight: 600; color: $text-main; }
+}
+
+// ============================================
+// BOTÃO REAGENDAR no card
+// ============================================
+.action-btn.reschedule {
+  background: rgba(#3b82f6, 0.12); color: #3b82f6;
+  &:hover:not(:disabled) { background: rgba(#3b82f6, 0.22); }
+}
