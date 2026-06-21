@@ -7,6 +7,7 @@ import { Observable, of, tap, catchError } from 'rxjs';
 export type LoginPayload = {
   email: string;
   password: string;
+  turnstileToken: string;
 };
 
 export type LoginResponse = {
@@ -19,6 +20,7 @@ export type LoginResponse = {
 
 export interface ForgotPasswordRequest {
   email: string;
+  turnstileToken: string;
 }
 
 export interface CompletePasswordResetRequest {
@@ -73,8 +75,8 @@ export class AuthService {
       );
   }
 
-  requestRecovery(email: string): Observable<any> {
-    const payload: ForgotPasswordRequest = { email };
+  requestRecovery(email: string, turnstileToken: string): Observable<any> {
+    const payload: ForgotPasswordRequest = { email, turnstileToken };
     return this.http.post(`${this.baseUrl}/recovery/request`, payload);
   }
 

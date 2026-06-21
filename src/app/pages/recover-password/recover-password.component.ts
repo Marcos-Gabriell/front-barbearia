@@ -1,14 +1,16 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { ToastService } from '../../core/ui/toast.service';
+import { TurnstileComponent } from '../../components/turnstlie/Turnstile.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-recover-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TurnstileComponent],
   templateUrl: './recover-password.component.html',
   styleUrls: ['./recover-password.component.scss']
 })
@@ -17,6 +19,8 @@ export class RecoverPasswordComponent {
   private authService = inject(AuthService);
   private toast = inject(ToastService);
   private router = inject(Router);
+
+  @ViewChild(TurnstileComponent) turnstile?: TurnstileComponent;
 
   step = signal<1 | 2 | 3>(1);
   isLoading = signal(false);
@@ -27,6 +31,9 @@ export class RecoverPasswordComponent {
   passwordStrength = signal(0);
   strengthLabel = signal(''); 
   strengthColor = signal('');
+
+  turnstileSiteKey = environment.turnstileSiteKey;
+  turnstileToken: string | null = null;
 
   emailForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]]
@@ -41,16 +48,25 @@ export class RecoverPasswordComponent {
     confirmNewPassword: ['', [Validators.required]]
   });
 
+  onTurnstileVerify(token: string) { this.turnstileToken = token; }
+  onTurnstileExpire() { this.turnstileToken = null; }
+  onTurnstileError() { this.turnstileToken = null; }
+
   submitEmail() {
     if (this.emailForm.invalid) {
       this.emailForm.markAllAsTouched();
+      return;
+    }
+
+    if (!this.turnstileToken) {
+      this.toast.warning('Aguarde a verificação de segurança carregar e tente novamente.');
       return;
     }
     
     const email = this.emailForm.value.email!;
     this.isLoading.set(true);
 
-    this.authService.requestRecovery(email).subscribe({
+    this.authService.requestRecovery(email, this.turnstileToken).subscribe({
       next: () => {
         this.toast.success('Código enviado para seu e-mail!');
         this.savedEmail.set(email);
@@ -59,11 +75,15 @@ export class RecoverPasswordComponent {
       },
       error: (err) => {
         this.isLoading.set(false);
+        this.turnstile?.reset();
+        this.turnstileToken = null;
         
         if (err.status === 404) {
           this.toast.error('E-mail não encontrado no sistema.');
         } else if (err.status === 400 && err.error?.message?.includes('inativo')) {
           this.toast.warning('Usuário inativo. Contate o suporte.');
+        } else if (err.status === 400) {
+          this.toast.error(err.error?.message || 'Verificação de segurança falhou. Tente novamente.');
         } else {
           this.toast.error('Erro ao conectar com o servidor.');
         }

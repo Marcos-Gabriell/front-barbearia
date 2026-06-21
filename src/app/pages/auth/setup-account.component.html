@@ -97,7 +97,17 @@
           </div>
         </div>
 
-        <button type="submit" class="btn-primary full-width" [disabled]="isLoading">
+        <!-- Verificação de segurança — Cloudflare Turnstile -->
+        <div class="form-group" style="display: flex; justify-content: center; margin: 8px 0;">
+          <app-turnstile
+            [siteKey]="turnstileSiteKey"
+            (verify)="onTurnstileVerify($event)"
+            (expire)="onTurnstileExpire()"
+            (error)="onTurnstileError()"
+          ></app-turnstile>
+        </div>
+
+        <button type="submit" class="btn-primary full-width" [disabled]="isLoading || !turnstileToken">
           Finalizar Cadastro
         </button>
 

@@ -75,7 +75,17 @@
            </a>
         </div>
 
-        <button class="btn-submit" type="submit" [disabled]="isLoading">
+        <!-- Verificação de segurança — Cloudflare Turnstile -->
+        <div class="field" style="display: flex; justify-content: center; margin: 8px 0;">
+          <app-turnstile
+            [siteKey]="turnstileSiteKey"
+            (verify)="onTurnstileVerify($event)"
+            (expire)="onTurnstileExpire()"
+            (error)="onTurnstileError()"
+          ></app-turnstile>
+        </div>
+
+        <button class="btn-submit" type="submit" [disabled]="isLoading || !turnstileToken">
           <span *ngIf="isLoading" class="spinner"></span>
           {{ isLoading ? 'Validando...' : 'Acessar Painel' }}
         </button>

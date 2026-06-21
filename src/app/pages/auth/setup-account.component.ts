@@ -1,13 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { UserService } from '../../core/services/users/user.service'; 
+import { TurnstileComponent } from '../../components/turnstlie/Turnstile.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-setup-account',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TurnstileComponent],
   templateUrl: './setup-account.component.html',
   styleUrls: ['./setup-account.component.scss']
 })
@@ -26,6 +28,10 @@ export class SetupAccountComponent implements OnInit {
   passwordStrength = 0;
   showPassword = false;
   showConfirmPassword = false;
+
+  @ViewChild(TurnstileComponent) turnstile?: TurnstileComponent;
+  turnstileSiteKey = environment.turnstileSiteKey;
+  turnstileToken: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -79,6 +85,10 @@ export class SetupAccountComponent implements OnInit {
     });
   }
 
+  onTurnstileVerify(token: string) { this.turnstileToken = token; }
+  onTurnstileExpire() { this.turnstileToken = null; }
+  onTurnstileError() { this.turnstileToken = null; }
+
   formatPhone(value: string) {
     let numbers = value.replace(/\D/g, '');
     if (numbers.length > 11) numbers = numbers.substring(0, 11);
@@ -114,6 +124,11 @@ export class SetupAccountComponent implements OnInit {
       return;
     }
 
+    if (!this.turnstileToken) {
+      this.submissionError = 'Aguarde a verificação de segurança carregar e tente novamente.';
+      return;
+    }
+
     this.isLoading = true;
     this.submissionError = '';
     
@@ -124,7 +139,8 @@ export class SetupAccountComponent implements OnInit {
       name: this.form.value.name,
       phone: rawPhone,
       password: this.form.value.password,
-      confirmPassword: this.form.value.confirmPassword
+      confirmPassword: this.form.value.confirmPassword,
+      turnstileToken: this.turnstileToken
     };
 
     this.userService.completeInvite(payload).subscribe({
@@ -134,6 +150,8 @@ export class SetupAccountComponent implements OnInit {
       },
       error: (err: any) => {
         this.isLoading = false;
+        this.turnstile?.reset();
+        this.turnstileToken = null;
         const msg = err.error?.message || err.error || 'Erro desconhecido';
         this.submissionError = typeof msg === 'string' ? msg : 'Erro ao criar conta. Tente novamente.';
       }
